@@ -3,3 +3,11 @@
 ################################################################################
 
 /App/SoftUpdater/.vs/SoftUpdater
+/App/SoftUpdater/Common/bin/Debug/netcoreapp3.1
+/App/SoftUpdater/Common/obj
+/App/SoftUpdater/Db/bin/Debug/netcoreapp3.1
+/App/SoftUpdater/Db/obj
+/App/SoftUpdater/Deploy/bin/Debug/netcoreapp3.1
+/App/SoftUpdater/Deploy/obj
+/App/SoftUpdater/SoftUpdater/bin/Debug/netcoreapp3.1
+/App/SoftUpdater/SoftUpdater/obj

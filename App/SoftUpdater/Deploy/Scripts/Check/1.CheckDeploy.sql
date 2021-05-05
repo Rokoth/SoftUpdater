@@ -1,0 +1,1 @@
+﻿select exists (select from information_schema.tables where table_schema = 'public' AND table_name = 'deploy_history');
