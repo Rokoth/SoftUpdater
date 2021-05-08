@@ -14,3 +14,6 @@
 /App/SoftUpdater/Contract/obj
 /App/SoftUpdater/Service/bin/Debug/netcoreapp3.1
 /App/SoftUpdater/Service/obj
+/App/SoftUpdater/DbClient/obj
+/App/SoftUpdater/SoftUpdaterClient/bin/Debug/netcoreapp3.1
+/App/SoftUpdater/SoftUpdaterClient/obj
