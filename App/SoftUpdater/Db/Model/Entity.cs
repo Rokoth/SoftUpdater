@@ -1,9 +1,10 @@
 ﻿using SoftUpdater.Db.Attributes;
 using System;
+using System.Linq.Expressions;
 
 namespace SoftUpdater.Db.Model
 {
-    public abstract class Entity
+    public abstract class Entity: IEntity
     {
         [PrimaryKey]
         [ColumnName("id")]
@@ -12,5 +13,55 @@ namespace SoftUpdater.Db.Model
         public DateTimeOffset VersionDate { get; set; }
         [ColumnName("is_deleted")]
         public bool IsDeleted { get; set; }
+    }
+
+    public interface IEntity
+    {
+        Guid Id { get; set; }
+        bool IsDeleted { get; set; }
+        DateTimeOffset VersionDate { get; set; }
+    }
+
+    public class Filter<T> where T : IEntity
+    {
+        public int Page { get; set; }
+        public int Size { get; set; }
+        public string Sort { get; set; }
+
+        public Expression<Func<T, bool>> Selector { get; set; }
+    }
+
+    public interface IIdentity
+    {
+        string Login { get; set; }
+        byte[] Password { get; set; }
+    }
+
+    [TableName("user")]
+    public class User : Entity, IIdentity
+    {
+        [ColumnName("name")]
+        public string Name { get; set; }
+        [ColumnName("description")]
+        public string Description { get; set; }
+        [ColumnName("login")]
+        public string Login { get; set; }
+        [ColumnName("password")]
+        public byte[] Password { get; set; }
+    }
+
+    [TableName("client")]
+    public class Client : Entity, IIdentity
+    {
+        [ColumnName("name")]
+        public string Name { get; set; }
+        [ColumnName("description")]
+        public string Description { get; set; }
+        [ColumnName("login")]
+        public string Login { get; set; }
+        [ColumnName("password")]
+        public byte[] Password { get; set; }       
+        [ColumnName("userid")]
+        public Guid UserId { get; set; }
     }
 }
