@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>0.0.1</Version>
+    <Description>Deploy lib wrapper</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/Rokoth/SoftUpdater</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Rokoth/SoftUpdater</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>2021 Dmitriy Rokoth</Copyright>
   </PropertyGroup>
 
     <ItemGroup>
@@ -13,6 +20,10 @@
     </None>
     <None Update="Scripts\Update\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
 
