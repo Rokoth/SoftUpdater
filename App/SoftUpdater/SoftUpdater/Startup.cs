@@ -17,6 +17,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SoftUpdater.Common;
 using SoftUpdater.Db.Context;
+using SoftUpdater.Db.Interface;
+using SoftUpdater.Db.Repository;
+using SoftUpdater.Service;
 using System;
 using System.Linq;
 
@@ -45,43 +48,50 @@ namespace SoftUpdater.SoftUpdaterHost
             
             services.AddCors();
             services.AddAuthentication()
-            .AddJwtBearer("token", options =>
+            .AddJwtBearer("Token", options =>
             {
                 options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    // укзывает, будет ли валидироваться издатель при валидации токена
+                    //// укзывает, будет ли валидироваться издатель при валидации токена
                     ValidateIssuer = true,
-                    // строка, представляющая издателя
+                    //// строка, представляющая издателя
                     ValidIssuer = AuthOptions.ISSUER,
 
-                    // будет ли валидироваться потребитель токена
+                    //// будет ли валидироваться потребитель токена
                     ValidateAudience = true,
-                    // установка потребителя токена
+                    //// установка потребителя токена
                     ValidAudience = AuthOptions.AUDIENCE,
-                    // будет ли валидироваться время существования
+                    //// будет ли валидироваться время существования
                     ValidateLifetime = true,
 
                     // установка ключа безопасности
                     IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
                     // валидация ключа безопасности
                     ValidateIssuerSigningKey = true,
+
                 };
-            }).AddCookie("cookie", options => {
+            }).AddCookie("Cookies", options => {
                 options.LoginPath = new PathString("/Account/Login");
             });
 
             services
                 .AddAuthorization(options =>
                 {
-                    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    var cookiePolicy = new AuthorizationPolicyBuilder()
                         .RequireAuthenticatedUser()
-                        .AddAuthenticationSchemes("token", "cookie")
+                        .AddAuthenticationSchemes("Cookies")
                         .Build();
+                    options.AddPolicy("Cookie", cookiePolicy);
+                    options.AddPolicy("Token", new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .AddAuthenticationSchemes("Token")
+                        .Build());
+                    options.DefaultPolicy = cookiePolicy;
                 });
 
-            //services.AddScoped<IRepository<Db.Model.User>, Repository<Db.Model.User>>();
+            services.AddScoped<IRepository<Db.Model.User>, Repository<Db.Model.User>>();
             //services.AddScoped<IRepository<Db.Model.Client>, Repository<Db.Model.Client>>();
             //services.AddScoped<IRepository<Db.Model.Message>, Repository<Db.Model.Message>>();
             //services.AddScoped<IRepository<Db.Model.MessageStatus>, Repository<Db.Model.MessageStatus>>();
@@ -89,7 +99,7 @@ namespace SoftUpdater.SoftUpdaterHost
             //services.AddScoped<IRepositoryHistory<Db.Model.ClientHistory>, RepositoryHistory<Db.Model.ClientHistory>>();
             //services.AddScoped<IRepositoryHistory<Db.Model.MessageHistory>, RepositoryHistory<Db.Model.MessageHistory>>();
             //services.AddScoped<IRepositoryHistory<Db.Model.MessageStatusHistory>, RepositoryHistory<Db.Model.MessageStatusHistory>>();
-            //services.AddScoped<IDataService, DataService>();
+            services.AddDataServices();
             //services.AddScoped<IDeployService, DeployService>();
             //services.AddScoped<INotifyService, NotifyService>();
             services.ConfigureAutoMapper();
@@ -113,14 +123,6 @@ namespace SoftUpdater.SoftUpdaterHost
             app.UseRouting();
             app.UseAuthorization();
             app.UseAuthentication();
-
-
-
-            //var cookiePolicyOptions = new CookiePolicyOptions
-            //{
-            //    MinimumSameSitePolicy = SameSiteMode.Strict,                
-            //};
-            //app.UseCookiePolicy(cookiePolicyOptions);
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>

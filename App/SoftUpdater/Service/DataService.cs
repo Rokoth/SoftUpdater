@@ -11,20 +11,122 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Service
+namespace SoftUpdater.Service
 {
+    public class UserDataService : DataService<Db.Model.User, Contract.Model.User,
+        Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>
+    {
+        public UserDataService(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+
+        }
+
+        protected override Expression<Func<Db.Model.User, bool>> GetFilter(Contract.Model.UserFilter filter)
+        {
+            return s => filter.Name == null || s.Name.Contains(filter.Name);
+        }
+
+        protected override Db.Model.User MapToEntityAdd(Contract.Model.UserCreator creator)
+        {
+            var entity = base.MapToEntityAdd(creator);
+            entity.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(creator.Password));
+            return entity;
+        }
+
+        protected override Db.Model.User UpdateFillFields(Contract.Model.UserUpdater entity, Db.Model.User entry)
+        {
+            entry.Description = entity.Description;
+            entry.Login = entity.Login;
+            entry.Name = entity.Name;
+            if (entity.PasswordChanged)
+            {
+                entry.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(entity.Password));
+            }
+            return entry;
+        }
+
+        protected override Func<Contract.Model.User, Contract.Model.User> EnrichFunc => null;
+
+        protected override string DefaultSort => "Name";
+        
+    }
+
     public abstract class DataService<TEntity, Tdto, TFilter, TCreator, TUpdater> :
-        DataGetService<TEntity, Tdto, TFilter>
-          where TEntity : SoftUpdater.Db.Model.IEntity
-            where Tdto : Contract.Model.Entity
-            where TFilter : Contract.Model.Filter<Tdto>
+        DataGetService<TEntity, Tdto, TFilter>, IAddDataService<Tdto, TCreator>, IUpdateDataService<Tdto, TUpdater>, IDeleteDataService<Tdto>
+          where TEntity : Db.Model.IEntity
+          where TUpdater: Contract.Model.IEntity
+          where Tdto : Contract.Model.Entity
+          where TFilter : Contract.Model.Filter<Tdto>
     {       
 
         public DataService(IServiceProvider serviceProvider): base(serviceProvider)
         {
             
         }
-       
+
+        protected virtual TEntity MapToEntityAdd(TCreator creator)
+        {
+            var result = _mapper.Map<TEntity>(creator);
+            result.Id = Guid.NewGuid();
+            result.IsDeleted = false;
+            result.VersionDate = DateTimeOffset.Now;
+            return result;
+        }
+
+        /// <summary>
+        /// add item method
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public async Task<Tdto> AddAsync(TCreator creator, CancellationToken token)
+        {
+            return await ExecuteAsync(async (repo) =>
+            {
+                var entity = MapToEntityAdd(creator);
+                var result = await repo.AddAsync(entity, true, token);
+                var prepare = _mapper.Map<Tdto>(result);
+                if (EnrichFunc != null)
+                {
+                    prepare = EnrichFunc(prepare);
+                }
+                return prepare;
+            });
+        }
+
+        protected abstract TEntity UpdateFillFields(TUpdater entity, TEntity entry);
+
+        public async Task<Tdto> UpdateAsync(TUpdater entity, CancellationToken token)
+        {
+            return await ExecuteAsync(async (repo) =>
+            {
+                var entry = await repo.GetAsync(entity.Id, token);
+                entry = UpdateFillFields(entity, entry);
+                TEntity result = await repo.UpdateAsync(entry, true, token);
+                var prepare = _mapper.Map<Tdto>(result);
+                if (EnrichFunc != null)
+                {
+                    prepare = EnrichFunc(prepare);
+                }
+                return prepare;
+            });
+        }
+
+        public async Task<Tdto> DeleteAsync(Guid id, CancellationToken token)
+        {
+            return await ExecuteAsync(async (repo) =>
+            {
+                var entity = await repo.GetAsync(id, token);
+                if (entity == null) throw new DataServiceException($"Entity with id = {id} not found in DB");
+                entity = await repo.DeleteAsync(entity, true, token);
+                var prepare = _mapper.Map<Tdto>(entity);
+                if (EnrichFunc != null)
+                {
+                    prepare = EnrichFunc(prepare);
+                }
+                return prepare;
+            });
+        }
     }
 
     public interface IGetDataService<Tdto, TFilter>
@@ -35,17 +137,32 @@ namespace Service
         Task<Contract.Model.PagedResult<Tdto>> GetAsync(TFilter filter, CancellationToken token);
     }
 
+    public interface IAddDataService<Tdto, TCreator> where Tdto : Contract.Model.Entity
+    {
+        Task<Tdto> AddAsync(TCreator entity, CancellationToken token);
+    }
+
+    public interface IUpdateDataService<Tdto, TUpdater> where Tdto : Contract.Model.Entity
+    {
+        Task<Tdto> UpdateAsync(TUpdater entity, CancellationToken token);
+    }
+
+    public interface IDeleteDataService<Tdto> where Tdto : Contract.Model.Entity
+    {
+        Task<Tdto> DeleteAsync(Guid id, CancellationToken token);
+    }
+
     public static class DataServiceExtension
     {
         public static IServiceCollection AddDataServices(this IServiceCollection services)
         {
-            //services.AddDataService<UserDataService, Db.Model.User, Contract.Model.User,
-            //    Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>();
+            services.AddDataService<UserDataService, Db.Model.User, Contract.Model.User,
+                Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>();
             
 
             //services.AddScoped<IGetDataService<Contract.Model.UserHistory, Contract.Model.UserHistoryFilter>, UserHistoryDataService>();
 
-            //services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAuthService, AuthService>();
 
 
 
@@ -53,15 +170,16 @@ namespace Service
         }
 
         private static IServiceCollection AddDataService<TService, TEntity, Tdto, TFilter, TCreator, TUpdater>(this IServiceCollection services)
-            where TEntity : SoftUpdater.Db.Model.Entity
+            where TEntity : Db.Model.Entity
+            where TUpdater : Contract.Model.IEntity
             where TService : DataService<TEntity, Tdto, TFilter, TCreator, TUpdater>
             where Tdto : Contract.Model.Entity
             where TFilter : Contract.Model.Filter<Tdto>
         {
             services.AddScoped<IGetDataService<Tdto, TFilter>, TService>();
-            //services.AddScoped<IAddDataService<Tdto, TCreator>, TService>();
-            //services.AddScoped<IUpdateDataService<Tdto, TUpdater>, TService>();
-            //services.AddScoped<IDeleteDataService<Tdto>, TService>();
+            services.AddScoped<IAddDataService<Tdto, TCreator>, TService>();
+            services.AddScoped<IUpdateDataService<Tdto, TUpdater>, TService>();
+            services.AddScoped<IDeleteDataService<Tdto>, TService>();
             return services;
         }
     }
@@ -88,14 +206,14 @@ namespace Service
 
     public abstract class DataGetService<TEntity, Tdto, TFilter> :
         IGetDataService<Tdto, TFilter>
-        where TEntity : SoftUpdater.Db.Model.IEntity
+        where TEntity : Db.Model.IEntity
         where Tdto : Contract.Model.Entity
         where TFilter : Contract.Model.Filter<Tdto>
     {
         protected IServiceProvider _serviceProvider;
         protected IMapper _mapper;
 
-        protected abstract string defaultSort { get; }
+        protected abstract string DefaultSort { get; }
 
         /// <summary>
         /// function for modify client filter to db filter
@@ -134,9 +252,9 @@ namespace Service
                 string sort = filter.Sort;
                 if (string.IsNullOrEmpty(sort))
                 {
-                    sort = defaultSort;
+                    sort = DefaultSort;
                 }
-                var result = await repo.GetAsync(new SoftUpdater.Db.Model.Filter<TEntity>
+                var result = await repo.GetAsync(new Db.Model.Filter<TEntity>
                 {
                     Size = filter.Size,
                     Page = filter.Page,
@@ -223,7 +341,7 @@ namespace Service
         /// <returns></returns>
         public async Task<ClaimsIdentity> Auth(Contract.Model.ClientIdentity login, CancellationToken token)
         {
-            return await AuthInternal<SoftUpdater.Db.Model.Client, Contract.Model.ClientIdentity>(login, CLIENT_ROLE_TYPE, TOKEN_AUTH_TYPE, token);
+            return await AuthInternal<Db.Model.Client, Contract.Model.ClientIdentity>(login, CLIENT_ROLE_TYPE, TOKEN_AUTH_TYPE, token);
         }
 
         /// <summary>
@@ -234,16 +352,16 @@ namespace Service
         /// <returns></returns>
         public async Task<ClaimsIdentity> Auth(Contract.Model.UserIdentity login, CancellationToken token)
         {
-            return await AuthInternal<SoftUpdater.Db.Model.User, Contract.Model.UserIdentity>(login, USER_ROLE_TYPE, COOKIES_AUTH_TYPE, token);
+            return await AuthInternal<Db.Model.User, Contract.Model.UserIdentity>(login, USER_ROLE_TYPE, COOKIES_AUTH_TYPE, token);
         }
 
         private async Task<ClaimsIdentity> AuthInternal<T, I>(I login, string roleType, string authType, CancellationToken token)
-            where T : SoftUpdater.Db.Model.Entity, SoftUpdater.Db.Model.IIdentity
+            where T : Db.Model.Entity, Db.Model.IIdentity
             where I : Contract.Model.IIdentity
         {
             var repo = _serviceProvider.GetRequiredService<Db.Interface.IRepository<T>>();
             var password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(login.Password));
-            var client = (await repo.GetAsync(new SoftUpdater.Db.Model.Filter<T>()
+            var client = (await repo.GetAsync(new Db.Model.Filter<T>()
             {
                 Page = 0,
                 Size = 10,

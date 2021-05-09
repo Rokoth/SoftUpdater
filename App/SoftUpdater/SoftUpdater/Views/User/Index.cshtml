@@ -1,0 +1,77 @@
+﻿@model IEnumerable<SoftUpdater.Contract.Model.User>
+
+@{
+    ViewData["Title"] = "Пользователи";
+}
+
+<div class="container">
+    @Html.ActionLink("Добавить", "Create", "User", null, new { @class = "btn btn-dark" })
+    <hr>
+    Фильтры:
+    <div id="filter">
+        <span class="col-sm-2">Наименование:</span><input id="filter_name" class="col-sm-4" />
+        <a href="#" id="refresh_filter_button" class="btn btn-dark col-sm-2 offset-1">Показать</a>
+    </div>
+    <div id="content"></div>
+    <div>
+        <a href="#" id="begin"><<</a>
+        <a href="#" id="back"><</a>
+        Страница <span id="page">0</span> из <span id="all_pages">0</span>
+        <a href="#" id="forward">></a>
+        <a href="#" id="end">>></a>
+        Показывать по <input id="count_items" value="10" /> элементов на странице
+    </div>
+</div>
+
+@section scripts
+{
+    <script type="text/javascript">
+        var page = 1;
+        var name = "";
+        var allPages = 1;
+
+        function refresh() {
+            $('#page').html(page);
+            $.get("User/ListPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
+                $('#content').html(data);
+                allPages = request.getResponseHeader('x-pages');
+                $('#all_pages').html(allPages);
+            });
+        }
+
+        $(function () {
+            $.ajaxSetup({ cache: false });
+            refresh();
+            $("#refresh_filter_button").click(function () {
+                refresh();
+            });
+            $('#count_items').change(function () {
+                refresh();
+            });
+            $("#begin").click(function () {
+                if (page > 1) {
+                    page = 1;
+                    refresh();
+                }
+            });
+            $("#back").click(function () {
+                if (page > 1) {
+                    page = page - 1;
+                    refresh();
+                }
+            });
+            $("#forward").click(function () {
+                if (page < allPages) {
+                    page = page + 1;
+                    refresh();
+                }
+            });
+            $("#end").click(function () {
+                if (page < allPages) {
+                    page = allPages;
+                    refresh();
+                }
+            });
+        })
+    </script>
+}

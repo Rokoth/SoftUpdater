@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Db.Interface
+namespace SoftUpdater.Db.Interface
 {
     public interface IRepository<T> where T : IEntity
     {
@@ -17,6 +17,7 @@ namespace Db.Interface
         /// <param name="token">token</param>
         /// <returns>PagedResult<T></returns>
         Task<Contract.Model.PagedResult<T>> GetAsync(Filter<T> filter, CancellationToken token);
+        Task<Contract.Model.PagedResult<T>> GetAsyncDeleted(Filter<T> filter, CancellationToken token);
         /// <summary>
         /// Get item of model by id
         /// </summary>
@@ -24,6 +25,7 @@ namespace Db.Interface
         /// <param name="token">token</param>
         /// <returns></returns>
         Task<T> GetAsync(Guid id, CancellationToken token);
+        Task<T> GetAsyncDeleted(Guid id, CancellationToken token);
         /// <summary>
         /// add model to db
         /// </summary>
@@ -32,6 +34,8 @@ namespace Db.Interface
         /// <param name="token">token</param>
         /// <returns></returns>
         Task<T> AddAsync(T entity, bool withSave, CancellationToken token);
+        Task<T> DeleteAsync(T entity, bool v, CancellationToken token);
+        Task<T> UpdateAsync(T entry, bool v, CancellationToken token);
     }
 
     [Serializable]

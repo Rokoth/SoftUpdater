@@ -1,0 +1,29 @@
+﻿@model IEnumerable<SoftUpdater.Contract.Model.UserHistory>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(s => s.HId)</th>
+            <th>@Html.DisplayNameFor(s => s.Id)</th>
+            <th>@Html.DisplayNameFor(s => s.Name)</th>
+            <th>@Html.DisplayNameFor(s => s.Login)</th>
+            <th>@Html.DisplayNameFor(s => s.Description)</th>
+            <th>@Html.DisplayNameFor(s => s.ChangeDate)</th>     
+            <th>@Html.DisplayNameFor(s => s.IsDeleted)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr>
+            <td>@item.HId</td>
+            <td>@item.Id</td>
+            <td>@item.Name</td>
+            <td>@item.Login</td>
+            <td>@item.Description</td>
+            <td>@item.ChangeDate</td>
+            <td>@item.IsDeleted</td>
+        </tr>
+        }
+    </tbody>
+</table>

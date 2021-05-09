@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageProjectUrl>https://github.com/Rokoth/SoftUpdater</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Rokoth/SoftUpdater</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>DB Wrapper for client app</Description>
+    <Copyright>2021 Dmitriy Rokoth</Copyright>
+    <Version>0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
