@@ -31,7 +31,7 @@
 
         function refresh() {
             $('#page').html(page);
-            $.get("User/HistoryListPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
+            $.get("HistoryListPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
                 $('#content').html(data);
                 allPages = request.getResponseHeader('x-pages');
                 $('#all_pages').html(allPages);

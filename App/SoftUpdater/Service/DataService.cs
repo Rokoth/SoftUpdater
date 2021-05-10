@@ -51,6 +51,25 @@ namespace SoftUpdater.Service
         
     }
 
+    public class UserHistoryDataService : DataGetService<Db.Model.UserHistory, Contract.Model.UserHistory,
+        Contract.Model.UserHistoryFilter>
+    {
+        public UserHistoryDataService(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+
+        }
+
+        protected override Func<Contract.Model.UserHistory, Contract.Model.UserHistory> EnrichFunc => null;
+
+        protected override string DefaultSort => "Name";
+
+        protected override Expression<Func<Db.Model.UserHistory, bool>> GetFilter(Contract.Model.UserHistoryFilter filter)
+        {
+            return s => (filter.Name == null || s.Name.Contains(filter.Name)) 
+                && (filter.Id == null || s.Id == filter.Id);
+        }
+    }
+
     public abstract class DataService<TEntity, Tdto, TFilter, TCreator, TUpdater> :
         DataGetService<TEntity, Tdto, TFilter>, IAddDataService<Tdto, TCreator>, IUpdateDataService<Tdto, TUpdater>, IDeleteDataService<Tdto>
           where TEntity : Db.Model.IEntity
@@ -157,10 +176,9 @@ namespace SoftUpdater.Service
         public static IServiceCollection AddDataServices(this IServiceCollection services)
         {
             services.AddDataService<UserDataService, Db.Model.User, Contract.Model.User,
-                Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>();
-            
+                Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>();           
 
-            //services.AddScoped<IGetDataService<Contract.Model.UserHistory, Contract.Model.UserHistoryFilter>, UserHistoryDataService>();
+            services.AddScoped<IGetDataService<Contract.Model.UserHistory, Contract.Model.UserHistoryFilter>, UserHistoryDataService>();
 
             services.AddScoped<IAuthService, AuthService>();
 

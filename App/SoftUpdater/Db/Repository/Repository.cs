@@ -45,7 +45,8 @@ namespace SoftUpdater.Db.Repository
         public async Task<T> DeleteAsync(T entity, bool withSave, CancellationToken token)
         {
             return await ExecuteAsync(async (context) => {
-                var item = context.Set<T>().Remove(entity).Entity;
+                entity.IsDeleted = true;
+                var item = context.Set<T>().Update(entity).Entity;
                 if (withSave) await context.SaveChangesAsync();
                 return item;
             }, "DeleteAsync");
@@ -97,9 +98,13 @@ namespace SoftUpdater.Db.Repository
             throw new NotImplementedException();
         }
 
-        public Task<T> UpdateAsync(T entry, bool v, CancellationToken token)
+        public async Task<T> UpdateAsync(T entity, bool withSave, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return await ExecuteAsync(async (context) => {                
+                var item = context.Set<T>().Update(entity).Entity;
+                if (withSave) await context.SaveChangesAsync();
+                return item;
+            }, "UpdateAsync");
         }
 
         private async Task<TEx> ExecuteAsync<TEx>(Func<DbPgContext, Task<TEx>> action, string method)
