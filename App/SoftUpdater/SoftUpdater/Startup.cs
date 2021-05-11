@@ -1,30 +1,27 @@
-///Copyright 2021 Dmitriy Rokoth
-///Licensed under the Apache License, Version 2.0
-//////
-///ref 0
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SoftUpdater.Common;
 using SoftUpdater.Db.Context;
 using SoftUpdater.Db.Interface;
 using SoftUpdater.Db.Repository;
 using SoftUpdater.Service;
-using System;
-using System.Linq;
 
 namespace SoftUpdater.SoftUpdaterHost
 {
+    /// <summary>
+    /// Initiate app
+    /// </summary>
     public class Startup
     {
         public Startup(IConfiguration configuration)
