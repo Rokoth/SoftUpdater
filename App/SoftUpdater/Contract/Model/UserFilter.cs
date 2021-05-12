@@ -19,6 +19,6 @@ namespace SoftUpdater.Contract.Model
             UserId = userId;
         }
         public string Name { get; }
-        public Guid UserId { get; }
+        public Guid? UserId { get; }
     }
 }

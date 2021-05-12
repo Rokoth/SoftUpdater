@@ -24,4 +24,42 @@ namespace SoftUpdater.Contract.Model
         [Display(Name = "Базовый каталог")]
         public string BasePath { get; set; }
     }
+
+    public class ClientUpdater : IEntity
+    {
+        public Guid Id { get; set; }
+        [Display(Name = "Имя")]
+        public string Name { get; set; }
+
+        [Display(Name = "Описание")]
+        public string Description { get; set; }
+
+        [Display(Name = "Логин")]
+        public string Login { get; set; }
+        [Display(Name = "Пароль")]
+        public string Password { get; set; }
+        public bool PasswordChanged { get; set; }
+        public Guid UserId { get; set; }
+        [Display(Name = "Пользователь")]
+        public User User { get; set; }
+        [Display(Name = "Базовый каталог")]
+        public string BasePath { get; set; }
+    }
+
+    public class ClientCreator
+    {       
+        [Display(Name = "Имя")]
+        public string Name { get; set; }
+
+        [Display(Name = "Описание")]
+        public string Description { get; set; }
+
+        [Display(Name = "Логин")]
+        public string Login { get; set; }
+        [Display(Name = "Пароль")]
+        public string Password { get; set; }        
+        public Guid UserId { get; set; }        
+        [Display(Name = "Базовый каталог")]
+        public string BasePath { get; set; }
+    }
 }

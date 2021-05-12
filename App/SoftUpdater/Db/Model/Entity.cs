@@ -92,5 +92,7 @@ namespace SoftUpdater.Db.Model
         public byte[] Password { get; set; }       
         [ColumnName("userid")]
         public Guid UserId { get; set; }
+        [ColumnName("base_path")]
+        public string BasePath { get; set; }
     }
 }

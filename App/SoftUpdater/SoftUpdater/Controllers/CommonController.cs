@@ -9,11 +9,15 @@ namespace SoftUpdater.Controllers
     /// <summary>
     /// Common api calls (without models)
     /// </summary>
+    [ApiController]
+    [Route("api/v1/common")]
+    [Produces("application/json")]
     public class CommonController : Controller
     {
-        public IActionResult Index()
+        [HttpGet("ping")]
+        public IActionResult Ping()
         {
-            return View();
+            return Ok();
         }
     }
 }

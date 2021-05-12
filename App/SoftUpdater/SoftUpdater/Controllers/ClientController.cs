@@ -64,5 +64,50 @@ namespace SoftUpdater.Controllers
                 return RedirectToAction("Index", "Error", new { ex.Message });
             }
         }
+
+        // GET: ClientController/Edit/5
+        [Authorize]
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                Client result = await _dataService.GetAsync(id, source.Token);
+                var updater = new ClientUpdater()
+                {
+                    Description = result.Description,
+                    Id = result.Id,
+                    Login = result.Login,
+                    Name = result.Name,
+                    BasePath = result.BasePath,                    
+                    PasswordChanged = false
+                };
+                return View(updater);
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // POST: ClientController/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<ActionResult> Edit(Guid id, ClientUpdater updater)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IUpdateDataService<Client, ClientUpdater>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                Client result = await _dataService.UpdateAsync(updater, source.Token);
+                return RedirectToAction("Details", new { id = result.Id });
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
     }
 }
