@@ -95,4 +95,41 @@ namespace SoftUpdater.Db.Model
         [ColumnName("base_path")]
         public string BasePath { get; set; }
     }
+
+    [TableName("h_client")]
+    public class ClientHistory : EntityHistory, IIdentity
+    {
+        [ColumnName("name")]
+        public string Name { get; set; }
+        [ColumnName("description")]
+        public string Description { get; set; }
+        [ColumnName("login")]
+        public string Login { get; set; }
+        [ColumnName("password")]
+        public byte[] Password { get; set; }
+        [ColumnName("userid")]
+        public Guid UserId { get; set; }
+        [ColumnName("base_path")]
+        public string BasePath { get; set; }
+    }
+
+    public class Release : Entity
+    {
+    }
+
+    public class ReleaseHistory : EntityHistory
+    {
+        public string Name { get; set; }
+    }
+
+    [TableName("release_architect")]
+    public class ReleaseArchitect : Entity 
+    {
+        [ColumnName("release_id")]
+        public Guid ReleaseId { get; set; }
+        [ColumnName("name")]
+        public string Name { get; set; }
+        [ColumnName("path")]
+        public string Path { get; set; }
+    }
 }

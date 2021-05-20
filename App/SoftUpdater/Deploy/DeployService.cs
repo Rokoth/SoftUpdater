@@ -1,4 +1,8 @@
-﻿using Deployer;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using Deployer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -8,15 +12,12 @@ using System.Threading.Tasks;
 using Npgsql;
 using System.Text.RegularExpressions;
 using SoftUpdater.Common;
-using System.Runtime.Serialization;
 
 namespace SoftUpdater.Deploy
 {
-    public interface IDeployService
-    {
-        Task Deploy(int? num = null);
-    }
-
+    /// <summary>
+    /// Deploy lib wrapper
+    /// </summary>
     public class DeployService : IDeployService
     {
         private readonly ILogger<DeployService> _logger;
@@ -29,11 +30,20 @@ namespace SoftUpdater.Deploy
             _connectionString = _options.Value.ConnectionString;
         }
 
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="connectionString">connectionString</param>
         public DeployService(string connectionString)
         {
             _connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Deploy db
+        /// </summary>
+        /// <param name="num">number of last update</param>
+        /// <returns></returns>
         public async Task Deploy(int? num = null)
         {
             var deployLog = string.Empty;
@@ -90,6 +100,10 @@ namespace SoftUpdater.Deploy
             }
         }
 
+        /// <summary>
+        /// TODO: move to deploy lib
+        /// </summary>
+        /// <param name="connectionString"></param>
         private void CheckDbForExists(string connectionString)
         {
             try
@@ -112,26 +126,6 @@ namespace SoftUpdater.Deploy
                 throw new DeployException($"Не удалось развернуть базу данных: " +
                     $"ошибка при проверке или создании базы: {ex.Message} {ex.StackTrace}");
             }
-        }
-    }
-
-    [Serializable]
-    internal class DeployException : Exception
-    {
-        public DeployException()
-        {
-        }
-
-        public DeployException(string message) : base(message)
-        {
-        }
-
-        public DeployException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        protected DeployException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
         }
     }
 }

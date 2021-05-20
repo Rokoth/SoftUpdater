@@ -21,4 +21,20 @@ namespace SoftUpdater.Contract.Model
         public string Name { get; }
         public Guid? UserId { get; }
     }
+
+    public class ReleaseFilter : Filter<Release>
+    {
+        public ReleaseFilter(int size, int page, string sort, string name) : base(size, page, sort)
+        {
+            Name = name;
+        }
+        public string Name { get; }
+    }
+
+    public class LoadHistoryFilter : Filter<LoadHistory>
+    {
+        public LoadHistoryFilter(int size, int page, string sort) : base(size, page, sort)
+        {            
+        }       
+    }
 }

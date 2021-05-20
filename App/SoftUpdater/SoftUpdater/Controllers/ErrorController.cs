@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using SoftUpdater.Contract.Model;
-using SoftUpdater.Models;
 
 namespace SoftUpdater.Controllers
 {
+    /// <summary>
+    /// Controller for error responses
+    /// </summary>
     public class ErrorController : Controller
     {
         private readonly ILogger<ErrorController> _logger;
@@ -19,6 +20,12 @@ namespace SoftUpdater.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Main method
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
         public IActionResult Index([FromQuery] string message, [FromQuery] string source = null)
         {
             return View(new ErrorMessage()

@@ -13,102 +13,6 @@ using System.Threading.Tasks;
 
 namespace SoftUpdater.Service
 {
-    public class UserDataService : DataService<Db.Model.User, Contract.Model.User,
-        Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>
-    {
-        public UserDataService(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-
-        }
-
-        protected override Expression<Func<Db.Model.User, bool>> GetFilter(Contract.Model.UserFilter filter)
-        {
-            return s => filter.Name == null || s.Name.Contains(filter.Name);
-        }
-
-        protected override Db.Model.User MapToEntityAdd(Contract.Model.UserCreator creator)
-        {
-            var entity = base.MapToEntityAdd(creator);
-            entity.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(creator.Password));
-            return entity;
-        }
-
-        protected override Db.Model.User UpdateFillFields(Contract.Model.UserUpdater entity, Db.Model.User entry)
-        {
-            entry.Description = entity.Description;
-            entry.Login = entity.Login;
-            entry.Name = entity.Name;
-            if (entity.PasswordChanged)
-            {
-                entry.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(entity.Password));
-            }
-            return entry;
-        }
-
-        protected override Func<Contract.Model.User, Contract.Model.User> EnrichFunc => null;
-
-        protected override string DefaultSort => "Name";
-        
-    }
-
-    public class ClientDataService : DataService<Db.Model.Client, Contract.Model.Client,
-        Contract.Model.ClientFilter, Contract.Model.ClientCreator, Contract.Model.ClientUpdater>
-    {
-        public ClientDataService(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-
-        }
-
-        protected override Expression<Func<Db.Model.Client, bool>> GetFilter(Contract.Model.ClientFilter filter)
-        {
-            return s => (filter.Name == null || s.Name.Contains(filter.Name)) && (filter.UserId == null || s.UserId == filter.UserId);
-        }
-
-        protected override Db.Model.Client MapToEntityAdd(Contract.Model.ClientCreator creator)
-        {
-            var entity = base.MapToEntityAdd(creator);
-            entity.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(creator.Password));
-            return entity;
-        }
-
-        protected override Db.Model.Client UpdateFillFields(Contract.Model.ClientUpdater entity, Db.Model.Client entry)
-        {
-            entry.Description = entity.Description;
-            entry.Login = entity.Login;
-            entry.Name = entity.Name;
-            entry.UserId = entity.UserId;
-            entry.BasePath = entity.BasePath;
-            if (entity.PasswordChanged)
-            {
-                entry.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(entity.Password));
-            }
-            return entry;
-        }
-
-        protected override Func<Contract.Model.Client, Contract.Model.Client> EnrichFunc => null;
-
-        protected override string DefaultSort => "Name";
-
-    }
-
-    public class UserHistoryDataService : DataGetService<Db.Model.UserHistory, Contract.Model.UserHistory,
-        Contract.Model.UserHistoryFilter>
-    {
-        public UserHistoryDataService(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-
-        }
-
-        protected override Func<Contract.Model.UserHistory, Contract.Model.UserHistory> EnrichFunc => null;
-
-        protected override string DefaultSort => "Name";
-
-        protected override Expression<Func<Db.Model.UserHistory, bool>> GetFilter(Contract.Model.UserHistoryFilter filter)
-        {
-            return s => (filter.Name == null || s.Name.Contains(filter.Name)) 
-                && (filter.Id == null || s.Id == filter.Id);
-        }
-    }
 
     public abstract class DataService<TEntity, Tdto, TFilter, TCreator, TUpdater> :
         DataGetService<TEntity, Tdto, TFilter>, IAddDataService<Tdto, TCreator>, IUpdateDataService<Tdto, TUpdater>, IDeleteDataService<Tdto>
@@ -145,10 +49,7 @@ namespace SoftUpdater.Service
                 var entity = MapToEntityAdd(creator);
                 var result = await repo.AddAsync(entity, true, token);
                 var prepare = _mapper.Map<Tdto>(result);
-                if (EnrichFunc != null)
-                {
-                    prepare = EnrichFunc(prepare);
-                }
+                prepare = await Enrich(prepare, token);
                 return prepare;
             });
         }
@@ -163,10 +64,7 @@ namespace SoftUpdater.Service
                 entry = UpdateFillFields(entity, entry);
                 TEntity result = await repo.UpdateAsync(entry, true, token);
                 var prepare = _mapper.Map<Tdto>(result);
-                if (EnrichFunc != null)
-                {
-                    prepare = EnrichFunc(prepare);
-                }
+                prepare = await Enrich(prepare, token);
                 return prepare;
             });
         }
@@ -179,10 +77,7 @@ namespace SoftUpdater.Service
                 if (entity == null) throw new DataServiceException($"Entity with id = {id} not found in DB");
                 entity = await repo.DeleteAsync(entity, true, token);
                 var prepare = _mapper.Map<Tdto>(entity);
-                if (EnrichFunc != null)
-                {
-                    prepare = EnrichFunc(prepare);
-                }
+                prepare = await Enrich(prepare, token);
                 return prepare;
             });
         }
@@ -279,9 +174,20 @@ namespace SoftUpdater.Service
 
 
         /// <summary>
-        /// function for enrichment data
+        /// function for enrichment data item
         /// </summary>
-        protected abstract Func<Tdto, Tdto> EnrichFunc { get; }
+        protected virtual async Task<Tdto> Enrich(Tdto entity, CancellationToken token)
+        {
+            return entity;
+        }
+
+        /// <summary>
+        /// function for enrichment data item
+        /// </summary>
+        protected virtual async Task<IEnumerable<Tdto>> Enrich(IEnumerable<Tdto> entities, CancellationToken token)
+        {
+            return entities;
+        }
 
         /// <summary>
         /// ctor
@@ -319,10 +225,7 @@ namespace SoftUpdater.Service
                     Selector = GetFilter(filter)
                 }, token);
                 var prepare = result.Data.Select(s => _mapper.Map<Tdto>(s));
-                if (EnrichFunc != null)
-                {
-                    prepare = prepare.Select(s => EnrichFunc(s));
-                }
+                prepare = await Enrich(prepare, token);
                 return new Contract.Model.PagedResult<Tdto>(prepare, result.AllCount);
             });
         }
@@ -339,10 +242,7 @@ namespace SoftUpdater.Service
             {
                 var result = await repo.GetAsync(id, token);
                 var prepare = _mapper.Map<Tdto>(result);
-                if (EnrichFunc != null)
-                {
-                    prepare = EnrichFunc(prepare);
-                }
+                prepare = await Enrich(prepare, token);
                 return prepare;
             });
         }

@@ -1,8 +1,15 @@
-﻿using System;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using System;
 using System.Runtime.Serialization;
 
 namespace SoftUpdater.Db.Interface
 {
+    /// <summary>
+    /// Wrapper for exceptions in DB methods
+    /// </summary>
     [Serializable]
     public class RepositoryException : Exception
     {
