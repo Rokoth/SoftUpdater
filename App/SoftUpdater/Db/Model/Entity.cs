@@ -132,4 +132,15 @@ namespace SoftUpdater.Db.Model
         [ColumnName("path")]
         public string Path { get; set; }
     }
+
+    [TableName("h_release_architect")]
+    public class ReleaseArchitectHistory : EntityHistory
+    {
+        [ColumnName("release_id")]
+        public Guid ReleaseId { get; set; }
+        [ColumnName("name")]
+        public string Name { get; set; }
+        [ColumnName("path")]
+        public string Path { get; set; }
+    }
 }

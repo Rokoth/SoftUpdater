@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -6,29 +9,37 @@ using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUpdater.Controllers
 {
+    /// <summary>
+    /// API: Контроллер авторизации клиентов
+    /// </summary>
     [Route("api/v1/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
         
-
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="serviceProvider"></param>
         public AuthController(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
-           
+            _serviceProvider = serviceProvider;           
         }
 
+        /// <summary>
+        /// authorization method
+        /// </summary>
+        /// <param name="login">Логин</param>
+        /// <returns>ClientIdentityResponse(Token, UserName)</returns>
         [HttpPost("auth")]
-        public async Task<IActionResult> Auth([FromBody] Contract.Model.ClientIdentity login)
+        public async Task<IActionResult> Auth([FromBody] ClientIdentity login)
         {
             try
             {
@@ -38,7 +49,7 @@ namespace SoftUpdater.Controllers
                 var identity = await dataService.Auth(login, source.Token);
                 if (identity == null)
                 {
-                    return BadRequest(new { errorText = "Invalid username or password." });
+                    return BadRequest("Неверный логин или пароль");
                 }
 
                 var now = DateTime.UtcNow;
