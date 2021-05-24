@@ -15,4 +15,19 @@ namespace SoftUpdater.Common
         /// </summary>
         public string ConnectionString { get; set; }
     }
+
+    public class ClientOptions: CommonOptions
+    { 
+        public string CheckUpdateSchedule { get; set; }
+        public string Login { get; set; }
+        public string Password { get; set; }        
+        public string Architecture { get; set; }
+        public string ReleasePath { get; set; }
+
+        public string CheckUpdateScheduleSelf { get; set; }
+        public string LoginSelf { get; set; }
+        public string PasswordSelf { get; set; }        
+        public string ArchitectureSelf { get; set; }
+        public string ReleasePathSelf { get; set; }
+    }
 }

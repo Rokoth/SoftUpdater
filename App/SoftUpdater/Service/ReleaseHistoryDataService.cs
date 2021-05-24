@@ -17,8 +17,8 @@ namespace SoftUpdater.Service
 
         protected override async Task<Contract.Model.ReleaseHistory> Enrich(Contract.Model.ReleaseHistory release, CancellationToken token)
         {
-            var userDataService = _serviceProvider.GetRequiredService<IGetDataService<Contract.Model.Client, Contract.Model.ClientFilter>>();
-            release.Client = await userDataService.GetAsync(release.ClientId, token);
+            var clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Contract.Model.Client, Contract.Model.ClientFilter>>();
+            release.Client = await clientDataService.GetAsync(release.ClientId, token);
             return release;
         }
 
@@ -32,7 +32,7 @@ namespace SoftUpdater.Service
             return releases;
         }
 
-        protected override string DefaultSort => "Name";
+        protected override string DefaultSort => "ChangeDate desc";
 
         protected override Expression<Func<Db.Model.ReleaseHistory, bool>> GetFilter(Contract.Model.ReleaseHistoryFilter filter)
         {

@@ -1,5 +1,6 @@
 ﻿using SoftUpdater.Contract.Model;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace SoftUpdater.ClientHttpClient
@@ -13,5 +14,7 @@ namespace SoftUpdater.ClientHttpClient
         Task<bool> Auth(ClientIdentity identity);
         void ConnectToServer(string server, Action<bool, bool, string> onResult);
         void Dispose();
+        Task<ReleaseClient> GetLastRelease(string currentVersion, string architecture);
+        Task<FileStream> DownloadRelease(Guid id);
     }
 }

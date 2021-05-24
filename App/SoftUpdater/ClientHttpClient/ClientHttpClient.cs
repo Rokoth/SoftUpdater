@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using SoftUpdater.Contract.Model;
+using System.IO;
 
 namespace SoftUpdater.ClientHttpClient
 {
@@ -154,6 +155,16 @@ namespace SoftUpdater.ClientHttpClient
         public void Dispose()
         {
             isDisposed = true;
+        }
+
+        public Task<ReleaseClient> GetLastRelease(string currentVersion, string architecture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<FileStream> DownloadRelease(Guid id)
+        {
+            throw new NotImplementedException();
         }
     }
 

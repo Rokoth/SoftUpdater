@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SoftUpdater.Contract.Model
 {
@@ -11,6 +12,18 @@ namespace SoftUpdater.Contract.Model
         public Guid ClientId { get; set; }
     }
 
+    public class ReleaseClient
+    {
+        public Guid Id { get; set; }
+        public string Version { get; set; }
+        public List<ReleaseArchitectClient> Architects { get; set; }
+    }
+
+    public class ReleaseArchitectClient
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
 
     public class ReleaseHistory : EntityHistory
     {
