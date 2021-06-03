@@ -30,19 +30,18 @@ namespace SoftUpdater.Db.Context
 
             foreach (var type in Assembly.GetAssembly(typeof(Entity)).GetTypes())
             {
-                if (typeof(Entity).IsAssignableFrom(type) && !type.IsAbstract)
+                if (typeof(IEntity).IsAssignableFrom(type) && !type.IsAbstract)
                 {
                     var configType = typeof(EntityConfiguration<>).MakeGenericType(type);
                     var config = Activator.CreateInstance(configType);
                     GetType().GetMethod(nameof(ApplyConf), BindingFlags.NonPublic | BindingFlags.Instance)
                         .MakeGenericMethod(type).Invoke(this, new object[] { modelBuilder, config });
 
-
                 }
             }
         }
 
-        private void ApplyConf<T>(ModelBuilder modelBuilder, EntityConfiguration<T> config) where T : Entity
+        private void ApplyConf<T>(ModelBuilder modelBuilder, EntityConfiguration<T> config) where T : class, IEntity
         {
             modelBuilder.ApplyConfiguration(config);
         }

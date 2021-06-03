@@ -4,12 +4,12 @@ namespace SoftUpdater.Contract.Model
 {
     public class PagedResult<T>
     {
-        public PagedResult(IEnumerable<T> data, int allCount)
+        public PagedResult(IEnumerable<T> data, int pageCount)
         {
             Data = data;
-            AllCount = allCount;
+            PageCount = pageCount;
         }
         public IEnumerable<T> Data { get; }
-        public int AllCount { get; }
+        public int PageCount { get; }
     }
 }

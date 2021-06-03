@@ -35,7 +35,7 @@ namespace SoftUpdater.Controllers
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<User, UserFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 var result = await _dataService.GetAsync(new UserFilter(size, page, sort, name), source.Token);
-                Response.Headers.Add("x-pages", result.AllCount.ToString());
+                Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
             catch (Exception ex)
@@ -59,7 +59,7 @@ namespace SoftUpdater.Controllers
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<UserHistory, UserHistoryFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 var result = await _dataService.GetAsync(new UserHistoryFilter(size, page, sort, name, id), source.Token);
-                Response.Headers.Add("x-pages", result.AllCount.ToString());
+                Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
             catch (Exception ex)

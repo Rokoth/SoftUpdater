@@ -1,7 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftUpdater.Service
 {
@@ -37,7 +41,34 @@ namespace SoftUpdater.Service
                 entry.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(entity.Password));
             }
             return entry;
-        }               
+        }
+
+        /// <summary>
+        /// function for enrichment data item
+        /// </summary>
+        protected override async Task<Contract.Model.Client> Enrich(Contract.Model.Client entity, CancellationToken token)
+        {
+            var userRepo = _serviceProvider.GetRequiredService<Db.Interface.IRepository< Db.Model.User>> ();
+            var user = await userRepo.GetAsync(entity.UserId, token);
+            if (user != null) entity.UserName = user.Name;
+            return entity;
+        }
+
+        /// <summary>
+        /// function for enrichment data item
+        /// </summary>
+        protected override async Task<IEnumerable<Contract.Model.Client>> Enrich(IEnumerable<Contract.Model.Client> entities, CancellationToken token)
+        {
+            List<Contract.Model.Client> result = new List<Contract.Model.Client>();
+            var userRepo = _serviceProvider.GetRequiredService<Db.Interface.IRepository<Db.Model.User>>();
+            foreach (var entity in entities)
+            {                
+                var user = await userRepo.GetAsync(entity.UserId, token);
+                if (user != null) entity.UserName = user.Name;
+                result.Add(entity);
+            }
+            return result;
+        }
 
         protected override string DefaultSort => "Name";
 

@@ -56,7 +56,7 @@ namespace SoftUpdater.Controllers
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 var result = await _dataService.GetAsync(new ClientFilter(size, page, sort, name, Guid.Parse(userId)), source.Token);
-                Response.Headers.Add("x-pages", result.AllCount.ToString());
+                Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
             catch (Exception ex)
@@ -101,8 +101,132 @@ namespace SoftUpdater.Controllers
             {
                 var _dataService = _serviceProvider.GetRequiredService<IUpdateDataService<Client, ClientUpdater>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
+                updater.UserId = Guid.Parse(User.Identity.Name);
                 Client result = await _dataService.UpdateAsync(updater, source.Token);
                 return RedirectToAction("Details", new { id = result.Id });
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // GET: UserController
+        [Authorize]
+        public ActionResult History()
+        {
+            return View();
+        }
+
+        [Authorize]
+        public async Task<ActionResult> HistoryListPaged(int page = 0, int size = 10, string sort = null, string name = null, Guid? id = null)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ClientHistory, ClientHistoryFilter>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                var result = await _dataService.GetAsync(new ClientHistoryFilter(size, page, sort, name, id), source.Token);
+                Response.Headers.Add("x-pages", result.PageCount.ToString());
+                return PartialView(result.Data);
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // GET: UserController/Details/5
+        [Authorize]
+        public async Task<ActionResult> Details([FromRoute]Guid id)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var result = await _dataService.GetAsync(id, cancellationTokenSource.Token);
+                return View(result);
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // GET: UserController/Details/5
+        [Authorize]
+        public async Task<ActionResult> Simple([FromRoute] Guid id)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var result = await _dataService.GetAsync(id, cancellationTokenSource.Token);
+                return PartialView(result);
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // GET: UserController/Create
+        [Authorize]
+        public ActionResult Create()
+        {
+            //Fill default fields
+            var user = new ClientCreator();
+            return View(user);
+        }
+
+        // POST: UserController/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<ActionResult> Create(ClientCreator creator)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IAddDataService<Client, ClientCreator>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                creator.UserId = Guid.Parse(User.Identity.Name);
+                Client result = await _dataService.AddAsync(creator, source.Token);
+                return RedirectToAction(nameof(Details), new { id = result.Id });
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // GET: UserController/Delete/5
+        [Authorize]
+        public async Task<ActionResult> Delete(Guid id)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                Client result = await _dataService.GetAsync(id, source.Token);
+                return View(result);
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+
+        // POST: UserController/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<ActionResult> Delete(Guid id, Client model)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IDeleteDataService<Client>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                Client result = await _dataService.DeleteAsync(id, source.Token);
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {

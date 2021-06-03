@@ -52,7 +52,7 @@ namespace SoftUpdater.Controllers
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<LoadHistory, LoadHistoryFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 var result = await _dataService.GetAsync(new LoadHistoryFilter(size, page, sort), source.Token);
-                Response.Headers.Add("x-pages", result.AllCount.ToString());
+                Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
             catch (Exception ex)

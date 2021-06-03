@@ -1,0 +1,27 @@
+﻿@model IEnumerable<SoftUpdater.Contract.Model.Release>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(s => s.Number)</th>
+            <th>@Html.DisplayNameFor(s => s.Path)</th>
+            <th>@Html.DisplayNameFor(s => s.Version)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr>
+            <td>@item.Number</td>
+            <td>@item.Path</td>
+            <td>@item.Version</td>            
+            <td>
+                @Html.ActionLink("Редактировать", "Edit", new { id = item.Id }, new { @class = "btn btn-dark" })
+                @Html.ActionLink("Удалить", "Delete", new { id = item.Id }, new { @class = "btn btn-dark" })
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>

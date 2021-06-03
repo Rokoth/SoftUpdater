@@ -21,7 +21,7 @@ namespace SoftUpdater.Contract.Model
         [Display(Name = "Id пользователя")]
         public Guid UserId { get; set; }
         [Display(Name = "Пользователь")]
-        public User User { get; set; }
+        public string UserName { get; set; }
         [Display(Name = "Базовый каталог")]
         public string BasePath { get; set; }
     }
@@ -39,7 +39,7 @@ namespace SoftUpdater.Contract.Model
         [Display(Name = "Id пользователя")]
         public Guid UserId { get; set; }
         [Display(Name = "Пользователь")]
-        public User User { get; set; }
+        public string UserName { get; set; }
         [Display(Name = "Базовый каталог")]
         public string BasePath { get; set; }
     }
@@ -60,7 +60,7 @@ namespace SoftUpdater.Contract.Model
         public bool PasswordChanged { get; set; }
         public Guid UserId { get; set; }
         [Display(Name = "Пользователь")]
-        public User User { get; set; }
+        public string UserName { get; set; }
         [Display(Name = "Базовый каталог")]
         public string BasePath { get; set; }
     }
@@ -76,7 +76,8 @@ namespace SoftUpdater.Contract.Model
         [Display(Name = "Логин")]
         public string Login { get; set; }
         [Display(Name = "Пароль")]
-        public string Password { get; set; }        
+        public string Password { get; set; }   
+        [Required]
         public Guid UserId { get; set; }        
         [Display(Name = "Базовый каталог")]
         public string BasePath { get; set; }

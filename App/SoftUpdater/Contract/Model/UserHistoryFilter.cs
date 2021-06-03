@@ -26,11 +26,13 @@ namespace SoftUpdater.Contract.Model
 
     public class ReleaseHistoryFilter : Filter<ReleaseHistory>
     {
-        public ReleaseHistoryFilter(int size, int page, string sort, string name, Guid? id) : base(size, page, sort)
+        public ReleaseHistoryFilter(Guid clientId, int size, int page, string sort, string name, Guid? id) : base(size, page, sort)
         {
             Name = name;
             Id = id;
+            ClientId = clientId;
         }
+        public Guid ClientId { get; }
         public string Name { get; }
         public Guid? Id { get; }
     }

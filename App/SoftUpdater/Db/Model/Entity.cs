@@ -1,5 +1,6 @@
 ﻿using SoftUpdater.Db.Attributes;
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace SoftUpdater.Db.Model
@@ -113,13 +114,33 @@ namespace SoftUpdater.Db.Model
         public string BasePath { get; set; }
     }
 
+    [TableName("release")]
     public class Release : Entity
     {
+        [ColumnName("name")]
+        public string Name { get; set; }
+        [ColumnName("path")]
+        public string Path { get; set; }
+        [ColumnName("version")]
+        public string Version { get; set; }
+        [ColumnName("number")]
+        public int Number { get; set; }       
+        [ColumnName("client_id")]
+        public Guid ClientId { get; set; }
+        [Ignore]
+        public List<ReleaseArchitect> ReleaseArchitects { get; set; }
     }
 
+    [TableName("h_release")]
     public class ReleaseHistory : EntityHistory
     {
         public string Name { get; set; }
+    }
+
+    [TableName("load_history")]
+    public class LoadHistory
+    {
+        
     }
 
     [TableName("release_architect")]

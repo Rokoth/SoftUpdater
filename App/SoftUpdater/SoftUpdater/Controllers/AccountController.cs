@@ -32,8 +32,8 @@ namespace SoftUpdater.TaskCollector.Controllers
         /// Login page
         /// </summary>
         /// <returns></returns>
-        public ActionResult Login()
-        {
+        public ActionResult Login(string returnUrl)
+        {            
             return View();
         }
 
@@ -80,16 +80,12 @@ namespace SoftUpdater.TaskCollector.Controllers
         /// LogOut method
         /// </summary>
         /// <returns></returns>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpGet]       
         public async Task<IActionResult> Logout()
         {
             try
             {
-                if (User.Identity.IsAuthenticated)
-                {
-                    await HttpContext.SignOutAsync();
-                }
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)

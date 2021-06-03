@@ -15,6 +15,7 @@ namespace SoftUpdater.Contract.Model
         [Display(Name = "Логин")]
         public string Login { get; set; }
         [Display(Name = "Пароль")]
+        [DataType(DataType.Password)]
         public string Password { get; set; }
         public bool PasswordChanged { get; set; }
     }

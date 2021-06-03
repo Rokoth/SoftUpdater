@@ -1,7 +1,7 @@
 ﻿@model SoftUpdater.Contract.Model.UserUpdater
 
 @{
-    ViewData["Title"] = "Редактировать пользователя";
+    ViewData["Title"] = "Редактировать пользователя";    
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -34,14 +34,11 @@
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Сохранить" class="btn btn-primary" />
+                <input type="submit" value="Сохранить" class="btn btn-dark" />
+                @Html.ActionLink("Вернуться", "Details", new { Id = Model.Id }, new { @class = "btn btn-dark" })
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Details">Вернуться</a>
 </div>
 
 @section Scripts {

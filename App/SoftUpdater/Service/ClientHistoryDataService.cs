@@ -18,18 +18,22 @@ namespace SoftUpdater.Service
         protected override async Task<Contract.Model.ClientHistory> Enrich(Contract.Model.ClientHistory client, CancellationToken token)
         {
             var userDataService = _serviceProvider.GetRequiredService<IGetDataService<Contract.Model.User, Contract.Model.UserFilter>>();
-            client.User = await userDataService.GetAsync(client.UserId, token);
+            var user = await userDataService.GetAsync(client.UserId, token);
+            if(user!=null) client.UserName = user.Name;
             return client;
         }
 
         protected override async Task<IEnumerable<Contract.Model.ClientHistory>> Enrich(IEnumerable<Contract.Model.ClientHistory> clients, CancellationToken token)
         {
+            List<Contract.Model.ClientHistory> result = new List<Contract.Model.ClientHistory>();
             var userDataService = _serviceProvider.GetRequiredService<IGetDataService<Contract.Model.User, Contract.Model.UserFilter>>();
             foreach (var client in clients)
             {
-                client.User = await userDataService.GetAsync(client.UserId, token);
+                var user = await userDataService.GetAsync(client.UserId, token);
+                if (user != null) client.UserName = (await userDataService.GetAsync(client.UserId, token)).Name;
+                result.Add(client);
             }
-            return clients;
+            return result;
         }
 
         protected override string DefaultSort => "Name";
@@ -38,6 +42,12 @@ namespace SoftUpdater.Service
         {
             return s => (filter.Name == null || s.Name.Contains(filter.Name))
                 && (filter.Id == null || s.Id == filter.Id);
+        }
+
+        protected override Func<Db.Model.Filter<Db.Model.ClientHistory>, CancellationToken,
+            Task<Contract.Model.PagedResult<Db.Model.ClientHistory>>> GetListFunc(Db.Interface.IRepository<Db.Model.ClientHistory> repo)
+        {
+            return repo.GetAsyncDeleted;
         }
     }
 }

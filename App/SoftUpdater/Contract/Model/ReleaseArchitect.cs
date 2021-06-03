@@ -17,5 +17,7 @@ namespace SoftUpdater.Contract.Model
         [Required(ErrorMessage = "Поле должно быть установлено")]
         [Remote("CheckPath", "ReleaseArchitect", ErrorMessage = "Путь уже используется")]
         public string Path { get; set; }
+
+        
     }
 }

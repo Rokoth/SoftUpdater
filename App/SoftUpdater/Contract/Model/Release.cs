@@ -34,13 +34,29 @@ namespace SoftUpdater.Contract.Model
     public class ReleaseUpdater : IEntity
     {
         public Guid Id { get; set; }
+        public string Path { get; set; }
+        public string Version { get; set; }
+        public int Number { get; set; }        
     }
 
     public class ReleaseCreator
     {
     }
 
+    public class ReleaseArchitectUpdater : IEntity
+    {
+        public Guid Id { get; set; }
+    }
+
+    public class ReleaseArchitectCreator
+    {
+    }
+
     public class LoadHistory : Entity
+    {
+    }
+
+    public class LoadHistoryCreator
     {
     }
 }

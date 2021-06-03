@@ -116,6 +116,7 @@ namespace SoftUpdater.Service
                 Contract.Model.ClientFilter, Contract.Model.ClientCreator, Contract.Model.ClientUpdater>();
 
             services.AddScoped<IGetDataService<Contract.Model.UserHistory, Contract.Model.UserHistoryFilter>, UserHistoryDataService>();
+            services.AddScoped<IGetDataService<Contract.Model.ClientHistory, Contract.Model.ClientHistoryFilter>, ClientHistoryDataService>();
             services.AddScoped<IAuthService, AuthService>();
 
             return services;
@@ -172,6 +173,10 @@ namespace SoftUpdater.Service
         /// </summary>
         protected abstract Expression<Func<TEntity, bool>> GetFilter(TFilter filter);
 
+        protected virtual Func<Db.Model.Filter<TEntity>, CancellationToken, Task<Contract.Model.PagedResult<TEntity>>> GetListFunc(Db.Interface.IRepository<TEntity> repo)
+        {
+            return repo.GetAsync;
+        }
 
         /// <summary>
         /// function for enrichment data item
@@ -217,7 +222,8 @@ namespace SoftUpdater.Service
                 {
                     sort = DefaultSort;
                 }
-                var result = await repo.GetAsync(new Db.Model.Filter<TEntity>
+                
+                var result = await GetListFunc(repo)(new Db.Model.Filter<TEntity>
                 {
                     Size = filter.Size,
                     Page = filter.Page,
@@ -226,7 +232,7 @@ namespace SoftUpdater.Service
                 }, token);
                 var prepare = result.Data.Select(s => _mapper.Map<Tdto>(s));
                 prepare = await Enrich(prepare, token);
-                return new Contract.Model.PagedResult<Tdto>(prepare, result.AllCount);
+                return new Contract.Model.PagedResult<Tdto>(prepare, result.PageCount);
             });
         }
 

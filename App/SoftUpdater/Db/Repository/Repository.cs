@@ -15,7 +15,7 @@ using System.Linq.Dynamic.Core;
 
 namespace SoftUpdater.Db.Repository
 {
-    public class Repository<T> : IRepository<T> where T : Entity
+    public class Repository<T> : IRepository<T> where T : class, IEntity 
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
@@ -70,7 +70,9 @@ namespace SoftUpdater.Db.Repository
                     .Skip(filter.Size * filter.Page)
                     .Take(filter.Size)
                     .ToListAsync();
-                return new Contract.Model.PagedResult<T>(result, await all.CountAsync());
+                var count = await all.CountAsync();
+                var pageCount = Math.Max(((count % filter.Size) == 0) ? (count / filter.Size) : ((count / filter.Size) + 1), 1);
+                return new Contract.Model.PagedResult<T>(result, pageCount);
             }, "GetAsync");
         }
 
@@ -88,14 +90,30 @@ namespace SoftUpdater.Db.Repository
             }, "GetAsync");
         }
 
-        public Task<Contract.Model.PagedResult<T>> GetAsyncDeleted(Filter<T> filter, CancellationToken token)
+        public async Task<Contract.Model.PagedResult<T>> GetAsyncDeleted(Filter<T> filter, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return await ExecuteAsync(async (context) => {
+                var all = context.Set<T>().Where(filter.Selector);
+                if (!string.IsNullOrEmpty(filter.Sort))
+                {
+                    all = all.OrderBy(filter.Sort);
+                }
+                var result = await all
+                    .Skip(filter.Size * filter.Page)
+                    .Take(filter.Size)
+                    .ToListAsync();
+                var count = await all.CountAsync();
+                var pageCount = Math.Max(((count % filter.Size) == 0) ? (count / filter.Size) : ((count / filter.Size) + 1),1);
+                return new Contract.Model.PagedResult<T>(result, pageCount);
+            }, "GetAsyncDeleted");
         }
 
-        public Task<T> GetAsyncDeleted(Guid id, CancellationToken token)
+        public async Task<T> GetAsyncDeleted(Guid id, CancellationToken token)
         {
-            throw new NotImplementedException();
+            return await ExecuteAsync(async (context) => {
+                return await context.Set<T>()
+                    .Where(s => s.Id == id).FirstOrDefaultAsync();
+            }, "GetAsync");
         }
 
         public async Task<T> UpdateAsync(T entity, bool withSave, CancellationToken token)

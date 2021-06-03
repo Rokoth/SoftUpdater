@@ -24,11 +24,25 @@ namespace SoftUpdater.Contract.Model
 
     public class ReleaseFilter : Filter<Release>
     {
-        public ReleaseFilter(int size, int page, string sort, string name) : base(size, page, sort)
+        public ReleaseFilter(Guid clientId, int size, int page, string sort, string name) : base(size, page, sort)
         {
             Name = name;
+            ClientId = clientId;
+        }
+
+        public Guid ClientId { get; }
+        public string Name { get; }
+    }
+
+    public class ReleaseArchitectFilter : Filter<ReleaseArchitect>
+    {
+        public ReleaseArchitectFilter(Guid releaseId, int size, int page, string sort, string name) : base(size, page, sort)
+        {
+            Name = name;
+            ReleaseId = releaseId;
         }
         public string Name { get; }
+        public Guid ReleaseId { get; }
     }
 
     public class LoadHistoryFilter : Filter<LoadHistory>
