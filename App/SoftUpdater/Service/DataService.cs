@@ -27,12 +27,13 @@ namespace SoftUpdater.Service
             
         }
 
-        protected virtual TEntity MapToEntityAdd(TCreator creator)
+        protected virtual async Task<TEntity> MapToEntityAdd(TCreator creator)
         {
             var result = _mapper.Map<TEntity>(creator);
             result.Id = Guid.NewGuid();
             result.IsDeleted = false;
             result.VersionDate = DateTimeOffset.Now;
+            await Task.CompletedTask;
             return result;
         }
 
@@ -46,7 +47,7 @@ namespace SoftUpdater.Service
         {
             return await ExecuteAsync(async (repo) =>
             {
-                var entity = MapToEntityAdd(creator);
+                var entity = await MapToEntityAdd(creator);
                 var result = await repo.AddAsync(entity, true, token);
                 var prepare = _mapper.Map<Tdto>(result);
                 prepare = await Enrich(prepare, token);
@@ -114,6 +115,8 @@ namespace SoftUpdater.Service
                 Contract.Model.UserFilter, Contract.Model.UserCreator, Contract.Model.UserUpdater>();
             services.AddDataService<ClientDataService, Db.Model.Client, Contract.Model.Client,
                 Contract.Model.ClientFilter, Contract.Model.ClientCreator, Contract.Model.ClientUpdater>();
+            services.AddDataService<ReleaseDataService, Db.Model.Release, Contract.Model.Release,
+                Contract.Model.ReleaseFilter, Contract.Model.ReleaseCreator, Contract.Model.ReleaseUpdater>();
 
             services.AddScoped<IGetDataService<Contract.Model.UserHistory, Contract.Model.UserHistoryFilter>, UserHistoryDataService>();
             services.AddScoped<IGetDataService<Contract.Model.ClientHistory, Contract.Model.ClientHistoryFilter>, ClientHistoryDataService>();
@@ -213,10 +216,7 @@ namespace SoftUpdater.Service
         public async Task<Contract.Model.PagedResult<Tdto>> GetAsync(TFilter filter, CancellationToken token)
         {
             return await ExecuteAsync(async (repo) =>
-            {
-                //Expression<Func<TEntity, bool>> expr = s => GetFilter(s, filter);
-                //var func = expr.Compile(true);
-
+            {                
                 string sort = filter.Sort;
                 if (string.IsNullOrEmpty(sort))
                 {
@@ -341,6 +341,16 @@ namespace SoftUpdater.Service
                     ClaimsIdentity.DefaultNameClaimType,
                     ClaimsIdentity.DefaultRoleClaimType);
                 return claimsIdentity;
+            }
+            else
+            { 
+               var test = (await repo.GetAsync(new Db.Model.Filter<T>()
+               {
+                   Page = 0,
+                   Size = 10,
+                   Selector = s => s.Login == login.Login
+               }, token)).Data.FirstOrDefault();
+               var assert = test.Password == password;
             }
             // если пользователя/клиента не найдено
             return null;

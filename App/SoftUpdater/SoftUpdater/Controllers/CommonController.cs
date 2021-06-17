@@ -56,7 +56,7 @@ namespace SoftUpdater.Controllers
 
         public CommonControllerBase(IServiceProvider serviceProvider)
         {
-
+            _logger = serviceProvider.GetRequiredService<ILogger<CommonControllerBase>>();
         }
 
         protected InternalServerErrorObjectResult InternalServerError()

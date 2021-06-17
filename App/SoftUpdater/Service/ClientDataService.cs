@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
@@ -22,10 +23,15 @@ namespace SoftUpdater.Service
             return s => (filter.Name == null || s.Name.Contains(filter.Name)) && (filter.UserId == null || s.UserId == filter.UserId);
         }
 
-        protected override Db.Model.Client MapToEntityAdd(Contract.Model.ClientCreator creator)
+        protected override async Task<Db.Model.Client> MapToEntityAdd(Contract.Model.ClientCreator creator)
         {
-            var entity = base.MapToEntityAdd(creator);
+            var entity = await base.MapToEntityAdd(creator);
             entity.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(creator.Password));
+
+            if (!Directory.Exists(creator.BasePath))
+            {
+                Directory.CreateDirectory(creator.BasePath);
+            }
             return entity;
         }
 

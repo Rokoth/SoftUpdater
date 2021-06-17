@@ -233,5 +233,27 @@ namespace SoftUpdater.Controllers
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
+
+        public ActionResult ListSelect()
+        {
+            return PartialView();
+        }
+
+        public async Task<IActionResult> ListSelectPaged(string name = null, int page = 0, int size = 10, string sort = null)
+        {
+            try
+            {
+                var userId = User.Identity.Name;
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                CancellationTokenSource source = new CancellationTokenSource(30000);
+                var result = await _dataService.GetAsync(new ClientFilter(size, page, sort, name, Guid.Parse(userId)), source.Token);
+                Response.Headers.Add("x-pages", result.PageCount.ToString());
+                return PartialView(result.Data);
+            }
+            catch (Exception ex)
+            {
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
     }
 }

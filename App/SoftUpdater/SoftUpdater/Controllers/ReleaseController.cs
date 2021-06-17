@@ -22,14 +22,14 @@ namespace SoftUpdater.Controllers
 
         // GET: UserController
         [Authorize]
-        public ActionResult Index([FromRoute] Guid clientId)
+        public ActionResult Index([FromQuery] Guid? clientId)
         {
-            ViewData["ClientId"] = clientId.ToString();
+            ViewData["ClientId"] = clientId?.ToString();
             return View();
         }
 
         [Authorize]
-        public async Task<ActionResult> ListPaged([FromRoute]Guid clientId,  
+        public async Task<ActionResult> ListPaged([FromQuery] Guid? clientId = null,  
             [FromQuery]int page = 0, [FromQuery]int size = 10,
             [FromQuery]string sort = null, [FromQuery]string name = null)
         {
@@ -98,7 +98,7 @@ namespace SoftUpdater.Controllers
         }
 
         [Authorize]
-        public async Task<ActionResult> HistoryListPaged([FromRoute] Guid clientId, [FromQuery] int page = 0, [FromQuery] int size = 10,
+        public async Task<ActionResult> HistoryListPaged([FromQuery] Guid? clientId = null, [FromQuery] int page = 0, [FromQuery] int size = 10,
             [FromQuery] string sort = null, [FromQuery] string name = null, Guid? id = null)
         {
             try
@@ -134,10 +134,16 @@ namespace SoftUpdater.Controllers
 
         // GET: UserController/Create
         [Authorize]
-        public ActionResult Create()
+        public async Task<IActionResult> Create([FromQuery] Guid? clientId)
         {
+            var userId = User.Identity.Name;
+            var _clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+            var cancellationTokenSource = new CancellationTokenSource(30000);
+            var clients = await _clientDataService.GetAsync(new ClientFilter(1, 0, null, null, Guid.Parse(userId)), cancellationTokenSource.Token);
             //Fill default fields
-            var user = new ReleaseCreator();
+            var user = new ReleaseCreator() { 
+                ClientId = clientId ?? clients.Data.First().Id                
+            };
             return View(user);
         }
 
@@ -145,7 +151,7 @@ namespace SoftUpdater.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<ActionResult> Create(ReleaseCreator creator)
+        public async Task<IActionResult> Create(ReleaseCreator creator)
         {
             try
             {

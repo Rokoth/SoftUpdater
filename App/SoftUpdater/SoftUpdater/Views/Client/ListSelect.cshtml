@@ -1,13 +1,9 @@
-﻿@model IEnumerable<SoftUpdater.Contract.Model.Release>
-
+﻿@model IEnumerable<SoftUpdater.Contract.Model.Client>
 @{
-    ViewData["Title"] = "Обновления";    
+    ViewData["Title"] = "Выбор формулы";
 }
 
 <div class="container">
-    <div id="client"></div>
-    @Html.ActionLink("Добавить", "Create", new { clientId = ViewData["ClientId"] }, new { @class = "btn btn-dark" })
-    @Html.ActionLink("История", "History", new { }, new { @class = "btn btn-dark" })
     <hr>
     Фильтры:
     <div id="filter">
@@ -31,21 +27,21 @@
         var page = 1;
         var name = "";
         var allPages = 1;
-        set_client();
 
         function refresh() {
-            $('#page').html(page);
-            $.get("Release/ListPaged/?clientId=@ViewData["ClientId"]&page=" + (page - 1) + "&size=" +
-                    $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
-                $('#content').html(data);
-                allPages = request.getResponseHeader('x-pages');
-                $('#all_pages').html(allPages);
-            });
-        }
 
-        function set_client() {
-            $.get("Client/Simple/@ViewData["ClientId"]" , function (data, textStatus, request) {
-                $('#client').html(data);
+            $('#page').html(page);
+
+            $.ajax({
+                type: 'GET',
+                url: "Formula/ListSelectPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(),
+                success: function (data, textStatus, request) {
+                    $('#content').html(data);
+                    $('#all_pages').html(request.getResponseHeader('x-pages'));
+                },
+                error: function (request, textStatus, errorThrown) {
+
+                }
             });
         }
 

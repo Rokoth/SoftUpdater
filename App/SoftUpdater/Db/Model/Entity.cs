@@ -97,28 +97,9 @@ namespace SoftUpdater.Db.Model
         public string BasePath { get; set; }
     }
 
-    [TableName("h_client")]
-    public class ClientHistory : EntityHistory, IIdentity
-    {
-        [ColumnName("name")]
-        public string Name { get; set; }
-        [ColumnName("description")]
-        public string Description { get; set; }
-        [ColumnName("login")]
-        public string Login { get; set; }
-        [ColumnName("password")]
-        public byte[] Password { get; set; }
-        [ColumnName("userid")]
-        public Guid UserId { get; set; }
-        [ColumnName("base_path")]
-        public string BasePath { get; set; }
-    }
-
     [TableName("release")]
     public class Release : Entity
-    {
-        [ColumnName("name")]
-        public string Name { get; set; }
+    {        
         [ColumnName("path")]
         public string Path { get; set; }
         [ColumnName("version")]
@@ -126,9 +107,7 @@ namespace SoftUpdater.Db.Model
         [ColumnName("number")]
         public int Number { get; set; }       
         [ColumnName("client_id")]
-        public Guid ClientId { get; set; }
-        [Ignore]
-        public List<ReleaseArchitect> ReleaseArchitects { get; set; }
+        public Guid ClientId { get; set; }       
     }
 
     [TableName("h_release")]

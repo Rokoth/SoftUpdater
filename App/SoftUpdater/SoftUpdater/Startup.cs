@@ -11,12 +11,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 using SoftUpdater.Common;
 using SoftUpdater.Db.Context;
 using SoftUpdater.Db.Interface;
 using SoftUpdater.Db.Repository;
 using SoftUpdater.Deploy;
 using SoftUpdater.Service;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Collections.Generic;
 
 namespace SoftUpdater.SoftUpdaterHost
 {
@@ -102,7 +106,10 @@ namespace SoftUpdater.SoftUpdaterHost
             services.AddScoped<IDeployService, DeployService>();
             //services.AddScoped<INotifyService, NotifyService>();
             services.ConfigureAutoMapper();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(s =>
+            {
+                s.OperationFilter<AddRequiredHeaderParameter>();
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -135,6 +142,28 @@ namespace SoftUpdater.SoftUpdaterHost
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+        }
+
+        public class AddRequiredHeaderParameter : IOperationFilter
+        {
+            public void Apply(OpenApiOperation operation, OperationFilterContext context)
+            {
+                if (operation.Parameters == null)
+                    operation.Parameters = new List<OpenApiParameter>();
+
+                operation.Parameters.Add(new OpenApiParameter
+                {
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Description = "access token",
+                    Required = true,
+                    Schema = new OpenApiSchema
+                    {
+                        Type = "string",
+                        Default = new OpenApiString("Bearer ")                        
+                    }
+                });
+            }
         }
     }
 }

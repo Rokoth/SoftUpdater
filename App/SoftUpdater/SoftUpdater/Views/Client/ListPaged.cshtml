@@ -25,6 +25,7 @@
             <td>
                 @Html.ActionLink("Редактировать", "Edit", new { id = item.Id }, new { @class = "btn btn-dark" })
                 @Html.ActionLink("Удалить", "Delete", new { id = item.Id }, new { @class = "btn btn-dark" })
+                @Html.ActionLink("Обновления", "Index", "Release", new { clientId = item.Id }, new { @class = "btn btn-dark" })
             </td>
         </tr>
         }
