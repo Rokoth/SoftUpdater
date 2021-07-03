@@ -35,10 +35,15 @@ namespace SoftUpdaterClient.Service
                     {
                         var downloadedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _downloadedVersionField);
                         var installedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _installedVersionField);
+                        //downloadedVersion.ParamValue
                     }
                     catch (Exception ex)
-                    { 
-                    
+                    {
+
+                    }
+                    finally
+                    {
+                        GetNextRunDateTime();
                     }
                 }
             }

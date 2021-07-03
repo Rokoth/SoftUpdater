@@ -21,31 +21,31 @@ namespace SoftUpdaterClient.Service
             _serviceHelper = _serviceProvider.GetRequiredService<IServiceHelper>();
         }
 
-        public bool Install(InstallType installType, string tmpDir, string appDir, string backupDir)
+        public bool Install(InstallSettings settings)
         {
             try
             {
-                switch (installType)
+                switch (settings.InstallType)
                 {
                     case InstallType.Replace:
-                        _serviceHelper.DirectoryCopy(tmpDir, appDir, true);
+                        _serviceHelper.DirectoryCopy(settings.TmpDir, settings.AppDir, settings.IgnoreDirectories, settings.IgnoreFiles, true);
                         break;
                     case InstallType.Setup:
-                        var setUpFile = Directory.GetFiles(tmpDir, "*.msi").FirstOrDefault();
+                        var setUpFile = Directory.GetFiles(settings.TmpDir, "*.msi").FirstOrDefault();
                         string command = null;
                         if (setUpFile != null)
                         {
-                            command = $"MSIEXEC /I \"{setUpFile}\" /L*v \"{tmpDir}\\install.log\"";
+                            command = $"MSIEXEC /I \"{setUpFile}\" /L*v \"{settings.TmpDir}\\install.log\"";
                         }
                         else
                         {
-                            setUpFile = Directory.GetFiles(tmpDir, "*.exe").FirstOrDefault();
+                            setUpFile = Directory.GetFiles(settings.TmpDir, "*.exe").FirstOrDefault();
                             if (setUpFile != null)
                             {
-                                command = $"\"{setUpFile}\" /L*v \"{tmpDir}\\install.log\" /I";
+                                command = $"\"{setUpFile}\" /L*v \"{settings.TmpDir}\\install.log\" /I";
                             }
                         }
-                        if (command == null) throw new Exception($"Файл установки в директории {tmpDir} не найден");
+                        if (command == null) throw new Exception($"Файл установки в директории {settings.TmpDir} не найден");
                         _serviceHelper.ExecuteCommand(command);
                         break;
                 }
@@ -55,7 +55,7 @@ namespace SoftUpdaterClient.Service
             catch (Exception ex)
             {
                 _logger.LogError($"Ошибка при установке обновления: {ex.Message} {ex.StackTrace}");
-                if (!RollBack(appDir, backupDir))
+                if (!RollBack(settings.AppDir, settings.BackupDir))
                 {
                     throw new Exception("Не удалось сделать откат после сбоя установки");
                 }
@@ -67,7 +67,7 @@ namespace SoftUpdaterClient.Service
         {
             try
             {
-                _serviceHelper.DirectoryCopy(backupDir, appDir, true);
+                _serviceHelper.DirectoryCopy(backupDir, appDir, new List<string>(), new List<string>(), true);
                 return true;
             }
             catch (Exception ex)
@@ -82,5 +82,16 @@ namespace SoftUpdaterClient.Service
     { 
         Setup = 1,
         Replace = 2
+    }
+
+    public class InstallSettings
+    { 
+        public InstallType InstallType { get; set; }
+        public string TmpDir { get; set; }
+        public string AppDir { get; set; }
+        public string BackupDir { get; set; }
+        public bool DoBackup { get; set; }
+        public List<string> IgnoreDirectories { get; set; }
+        public List<string> IgnoreFiles { get; set; }
     }
 }

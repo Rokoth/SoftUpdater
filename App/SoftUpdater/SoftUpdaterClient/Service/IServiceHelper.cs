@@ -5,7 +5,7 @@ namespace SoftUpdaterClient.Service
 {
     public interface IServiceHelper
     {
-        bool DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs);
+        bool DirectoryCopy(string sourceDirName, string destDirName, List<string> ignoreDirectories, List<string> ignoreFiles, bool copySubDirs);
         Task<bool> Execute(string command);
         bool ExecuteCommand(string command);
         Task<bool> PostgreSqlDump(string outFile, string host, string port, string database, string user, string password);

@@ -38,4 +38,25 @@ namespace SoftUpdater.Service
             return result;
         }
     }
+
+    public class ReleaseArchitectDataService : DataService<Db.Model.ReleaseArchitect, Contract.Model.ReleaseArchitect,
+        Contract.Model.ReleaseArchitectFilter, Contract.Model.ReleaseArchitectCreator, Contract.Model.ReleaseArchitectUpdater>
+    {
+        public ReleaseArchitectDataService(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+
+        }
+
+        protected override Expression<Func<Db.Model.ReleaseArchitect, bool>> GetFilter(Contract.Model.ReleaseArchitectFilter filter)
+        {
+            return s => s.ReleaseId == filter.ReleaseId && (string.IsNullOrEmpty(filter.Name) || s.Name == filter.Name);
+        }
+
+        protected override Db.Model.ReleaseArchitect UpdateFillFields(Contract.Model.ReleaseArchitectUpdater entity, Db.Model.ReleaseArchitect entry)
+        {
+            return entry;
+        }
+
+        protected override string DefaultSort => "Name";                
+    }
 }
