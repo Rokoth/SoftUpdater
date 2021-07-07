@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace SoftUpdaterClient.Service
 {
-    public class InstallService
+    public class InstallService : IInstallService
     {
         private IServiceProvider _serviceProvider;
         private ILogger _logger;
@@ -61,7 +61,7 @@ namespace SoftUpdaterClient.Service
                 }
                 return false;
             }
-        }               
+        }
 
         private bool RollBack(string appDir, string backupDir)
         {
@@ -75,7 +75,7 @@ namespace SoftUpdaterClient.Service
                 _logger.LogError($"Ошибка при установке обновления: {ex.Message} {ex.StackTrace}");
                 return false;
             }
-        }        
+        }
     }
 
     public enum InstallType
