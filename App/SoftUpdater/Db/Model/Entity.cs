@@ -97,12 +97,6 @@ namespace SoftUpdater.Db.Model
         public string BasePath { get; set; }
     }
 
-    [TableName("h_release")]
-    public class ReleaseHistory : EntityHistory
-    {
-        public string Name { get; set; }
-    }
-
     [TableName("load_history")]
     public class LoadHistory
     {

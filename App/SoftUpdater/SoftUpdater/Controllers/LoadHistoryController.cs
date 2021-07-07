@@ -1,20 +1,27 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUpdater.Controllers
 {
+    /// <summary>
+    /// Контроллер истории загрузок обновлений
+    /// </summary>
     public class LoadHistoryController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger _logger;
+
         /// <summary>
         /// ctor
         /// </summary>
@@ -22,11 +29,11 @@ namespace SoftUpdater.Controllers
         public LoadHistoryController(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _logger = serviceProvider.GetRequiredService<ILogger<LoadHistoryController>>();
         }
 
-        // GET: ClientController
         /// <summary>
-        /// List method
+        /// Список истории загрузок обновлений
         /// </summary>
         /// <returns></returns>
         [Authorize]
@@ -36,12 +43,11 @@ namespace SoftUpdater.Controllers
         }
 
         /// <summary>
-        /// paged partial view
+        /// Список истории загрузок обновлений
         /// </summary>
         /// <param name="page">page number from 0</param>
         /// <param name="size">page size</param>
-        /// <param name="sort">sorting</param>
-        /// <param name="name">name filter</param>
+        /// <param name="sort">sorting</param>        
         /// <returns></returns>
         [Authorize]
         public async Task<ActionResult> ListPaged(int page = 0, int size = 10, string sort = null)
@@ -57,6 +63,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Ошибка в методе получения истории загрузок: {ex.Message} \r\n {ex.StackTrace} ");
                 return RedirectToAction("Index", "Error", new { ex.Message });
             }
         }
