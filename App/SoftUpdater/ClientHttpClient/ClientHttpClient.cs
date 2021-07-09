@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using SoftUpdater.Contract.Model;
 using System.IO;
+using System.Net;
 
 namespace SoftUpdater.ClientHttpClient
 {
@@ -93,7 +94,7 @@ namespace SoftUpdater.ClientHttpClient
             _token = result.Token;
             return true;
         }
-
+                
         private async Task<T> Execute<T>(
             Func<HttpClient, Task<HttpResponseMessage>> action,
             string method,
@@ -157,12 +158,64 @@ namespace SoftUpdater.ClientHttpClient
             isDisposed = true;
         }
 
-        public Task<ReleaseClient> GetLastRelease(string currentVersion, string architecture)
+        public async Task<ReleaseClient> GetLastRelease(string currentVersion)
         {
-            throw new NotImplementedException();
+            var result = (await Execute(client =>
+            {
+                var request = new HttpRequestMessage()
+                {
+                    Headers = {
+                            { HttpRequestHeader.Authorization.ToString(), $"Bearer {_token}" },
+                            { HttpRequestHeader.ContentType.ToString(), "application/json" },
+                        },
+                    RequestUri = new Uri($"{GetApi<ReleaseClient>()}"),
+                    Method = HttpMethod.Get
+                };
+
+                return client.SendAsync(request);
+            },
+                "GetReleases", s => s.ParseResponseArray<ReleaseClient>())).ToList();
+
+            if (result != null && result.Any())
+            {
+                var lastVersion = result.First();
+                for (int i = 1; i < result.Count(); i++)
+                {
+                    if (VersionCompare(result[i].Version, lastVersion.Version))
+                    {
+                        lastVersion = result[i];
+                    }
+                }
+                return lastVersion;
+            }
+            return null;
         }
 
-        public Task<FileStream> DownloadRelease(Guid id)
+        private bool VersionCompare(string downloadedVersion, string installedVersion)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(downloadedVersion)) return false;
+                if (string.IsNullOrEmpty(installedVersion)) return true;
+                if (downloadedVersion == installedVersion) return false;
+                var downLoaded = downloadedVersion.Split('.').Select(s => int.Parse(s)).ToArray();
+                var installed = installedVersion.Split('.').Select(s => int.Parse(s)).ToArray();
+
+                for (int i = 0; i < downLoaded.Length; i++)
+                {
+                    if (installed.Length < i) return true;
+                    if (downLoaded[i] > installed[i]) return true;
+                    if (downLoaded[i] < installed[i]) return false;
+                }
+                return false;
+            }
+            catch
+            {
+                return downloadedVersion != installedVersion;
+            }
+        }
+
+        public Task<FileStream> DownloadRelease(Guid id, string architecture)
         {
             throw new NotImplementedException();
         }
@@ -197,7 +250,7 @@ namespace SoftUpdater.ClientHttpClient
             return null;
         }
 
-        public static async Task<(int, IEnumerable<T>)> ParseResponseArray<T>(this HttpResponseMessage result) where T : class
+        public static async Task<IEnumerable<T>> ParseResponseArray<T>(this HttpResponseMessage result) where T : class
         {
             if (result != null && result.IsSuccessStatusCode)
             {
@@ -206,15 +259,10 @@ namespace SoftUpdater.ClientHttpClient
                 foreach (var item in JArray.Parse(response))
                 {
                     ret.Add(item.ToObject<T>());
-                }
-                int count = 0;
-                if (result.Headers.TryGetValues("x-pages", out IEnumerable<string> pageHeaders))
-                {
-                    int.TryParse(pageHeaders.FirstOrDefault(), out count);
-                }
-                return (count, ret);
+                }                
+                return ret;
             }
-            return (0, null);
+            return null;
         }
     }
 }
