@@ -23,7 +23,7 @@ namespace SoftUpdater.Controllers
         // GET: UserController
         [Authorize]
         public ActionResult Index([FromQuery] Guid? clientId)
-        {
+        {            
             ViewData["ClientId"] = clientId?.ToString();
             return View();
         }
@@ -34,10 +34,22 @@ namespace SoftUpdater.Controllers
             [FromQuery]string sort = null, [FromQuery]string name = null)
         {
             try
-            {                
+            {
+                List<Guid> clients = null;
+                var userId = User.Identity.Name;
+                var _clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                clients = (await _clientDataService.GetAsync(
+                    new ClientFilter(10000, 0, null, null, Guid.Parse(userId)), cancellationTokenSource.Token)).Data.Select(s => s.Id).ToList();
+                if (clientId != null)
+                {
+                    if (!clients.Any(s => s == clientId.Value)) throw new Exception("Неверный клиент");
+                    clients = new List<Guid> { clientId.Value };
+                }
+                
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Release, ReleaseFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
-                var result = await _dataService.GetAsync(new ReleaseFilter(clientId, size, page, sort, name), source.Token);
+                var result = await _dataService.GetAsync(new ReleaseFilter(clients, size, page, sort, name), source.Token);
                 Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
@@ -135,16 +147,22 @@ namespace SoftUpdater.Controllers
         // GET: UserController/Create
         [Authorize]
         public async Task<IActionResult> Create([FromQuery] Guid? clientId)
-        {
+        {            
             var userId = User.Identity.Name;
             var _clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
             var cancellationTokenSource = new CancellationTokenSource(30000);
-            var clients = await _clientDataService.GetAsync(new ClientFilter(1, 0, null, null, Guid.Parse(userId)), cancellationTokenSource.Token);
-            //Fill default fields
-            var user = new ReleaseCreator() { 
-                ClientId = clientId ?? clients.Data.First().Id                
+            var clients = await _clientDataService.GetAsync(new ClientFilter(10000, 0, null, null, Guid.Parse(userId)), cancellationTokenSource.Token);
+            if (clientId!=null && !clients.Data.Any(s=>s.Id == clientId.Value))
+            {
+                return RedirectToAction("Index", "Error", new { Message = "Неверный клиент" });
+            }
+            clientId ??= clients.Data.First().Id;
+
+            var creator = new ReleaseCreator() { 
+                ClientId = clientId.Value,
+                Client = clients.Data.FirstOrDefault(s=>s.Id == clientId.Value).Name
             };
-            return View(user);
+            return View(creator);
         }
 
         // POST: UserController/Create

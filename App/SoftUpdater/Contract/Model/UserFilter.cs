@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SoftUpdater.Contract.Model
 {
@@ -24,12 +25,12 @@ namespace SoftUpdater.Contract.Model
 
     public class ReleaseFilter : Filter<Release>
     {
-        public ReleaseFilter(Guid? clientId, int size, int page, string sort, string name) : base(size, page, sort)
+        public ReleaseFilter(List<Guid> clients, int size, int page, string sort, string name) : base(size, page, sort)
         {
             Name = name;
-            ClientId = clientId;           
+            Clients = clients;           
         }        
-        public Guid? ClientId { get; }
+        public List<Guid> Clients { get; }
         public string Name { get; }
     }
 

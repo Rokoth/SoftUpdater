@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<SoftUpdater.Contract.Model.Client>
 @{
-    ViewData["Title"] = "Выбор формулы";
+    ViewData["Title"] = "Выбор клиента";
 }
 
 <div class="container">
@@ -34,7 +34,7 @@
 
             $.ajax({
                 type: 'GET',
-                url: "Formula/ListSelectPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(),
+                url: "Client/ListSelectPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(),
                 success: function (data, textStatus, request) {
                     $('#content').html(data);
                     $('#all_pages').html(request.getResponseHeader('x-pages'));

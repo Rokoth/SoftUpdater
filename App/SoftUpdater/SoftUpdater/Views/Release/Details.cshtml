@@ -1,4 +1,4 @@
-﻿@model SoftUpdater.Contract.Model.Client
+﻿@model SoftUpdater.Contract.Model.Release
 
 @{
     ViewData["Title"] = "Клиент";
@@ -10,41 +10,35 @@
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
+            @Html.DisplayNameFor(model => model.Number)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Name)
+            @Html.DisplayFor(model => model.Number)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
+            @Html.DisplayNameFor(model => model.Path)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
+            @Html.DisplayFor(model => model.Path)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Login)
+            @Html.DisplayNameFor(model => model.Version)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Login)
+            @Html.DisplayFor(model => model.Version)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.UserId)
+            @Html.DisplayNameFor(model => model.ClientId)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.UserId)
+            @Html.DisplayFor(model => model.ClientId)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.UserName)
+            @Html.DisplayNameFor(model => model.Client)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.UserName)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.BasePath)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.BasePath)
-        </dd>
+            @Html.DisplayFor(model => model.Client)
+        </dd>        
     </dl>
 </div>
 <div>

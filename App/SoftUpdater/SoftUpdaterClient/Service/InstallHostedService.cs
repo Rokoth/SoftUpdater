@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SoftUpdaterClient.Service
 {
-    public class SelfUpdateHostedService : IHostedService
+    public class InstallHostedService : IHostedService
     {
         private IServiceProvider _serviceProvider;
         private CancellationTokenSource _cancellationTokenSource;
@@ -27,17 +27,17 @@ namespace SoftUpdaterClient.Service
         private ClientOptions _options;
         private ILogger _logger;
 
-        public SelfUpdateHostedService(IServiceProvider serviceProvider)
+        public InstallHostedService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             _cancellationTokenSource = new CancellationTokenSource();
             _context = _serviceProvider.GetRequiredService<DbSqLiteContext>();
             _options = _serviceProvider.GetRequiredService<IOptions<ClientOptions>>().Value;
-            _downloadedVersionField = _options.DownloadedSelfVersionField;
-            _installedVersionField = _options.InstalledSelfVersionField;
-            _nextRunDateTimeField = _options.NextRunDateTimeSelfField;
-            _expression = CronExpression.Parse(_options.InstallSelfSchedule);
-            _logger = _serviceProvider.GetRequiredService<ILogger<SelfUpdateHostedService>>();
+            _downloadedVersionField = _options.DownloadedVersionField;
+            _installedVersionField = _options.InstalledVersionField;
+            _nextRunDateTimeField = _options.NextRunDateTimeField;
+            _expression = CronExpression.Parse(_options.InstallSchedule);
+            _logger = _serviceProvider.GetRequiredService<ILogger<InstallHostedService>>();
             GetNextRunDateTime();
         }
 
@@ -50,19 +50,17 @@ namespace SoftUpdaterClient.Service
                     try
                     {
                         var downloadedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _downloadedVersionField);
-                        var installedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _installedVersionField);
+                        var installedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _installedVersionField);                        
                         if (VersionCompare(downloadedVersion?.ParamValue, installedVersion?.ParamValue))
                         {
-                            var installService = _serviceProvider.GetRequiredService<IInstallSelfService>();
+                            var installService = _serviceProvider.GetRequiredService<IInstallService>();
                             if (installService.Install(new InstallSettings()
                             {
-                                AppDir = _options.ApplicationSelfDirectory,
-                                BackupDir = _options.BackupSelfDirectory,
+                                AppDir = _options.ApplicationDirectory,
+                                BackupDir = _options.BackupDirectory,
                                 DoBackup = true,
                                 IgnoreDirectories = new List<string>() {
-                                    _options.BackupSelfDirectory, 
-                                    _options.ReleasePathSelf, 
-                                    Directory.GetCurrentDirectory()
+                                   _options.BackupDirectory, _options.ReleasePath, Directory.GetCurrentDirectory()
                                 },
                                 IgnoreFiles = new List<string>(),
                                 InstallType = InstallType.Replace,
@@ -114,11 +112,11 @@ namespace SoftUpdaterClient.Service
                 if (downloadedVersion == installedVersion) return false;
                 var downLoaded = downloadedVersion.Split('.').Select(s => int.Parse(s)).ToArray();
                 var installed = installedVersion.Split('.').Select(s => int.Parse(s)).ToArray();
-
+                 
                 for (int i = 0; i < downLoaded.Length; i++)
                 {
                     if (installed.Length < i) return true;
-                    if (downLoaded[i] > installed[i]) return true;
+                    if(downLoaded[i] > installed[i]) return true;
                     if (downLoaded[i] < installed[i]) return false;
                 }
                 return false;
@@ -137,24 +135,23 @@ namespace SoftUpdaterClient.Service
                 if (nextRunDateTimeSettings != null)
                 {
                     if (DateTimeOffset.TryParse(nextRunDateTimeSettings.ParamValue, out _nextRunDateTime)) return;
-                }
+                }                
             }
             _nextRunDateTime = _expression.GetNextOccurrence(DateTimeOffset.Now, TimeZoneInfo.Local).Value;
             var nextRunDateTime = _context.Settings.FirstOrDefault(s => s.ParamName == _nextRunDateTimeField);
             if (nextRunDateTime != null)
             {
                 nextRunDateTime.ParamValue = _nextRunDateTime.ToString();
-                _context.Settings.Update(nextRunDateTime);
+                _context.Settings.Update(nextRunDateTime);                
             }
             else
             {
                 var maxId = _context.Settings.Select(s => s.Id).Max();
-                _context.Settings.Add(new DbClient.Model.Settings()
-                {
-                    Id = maxId + 1,
-                    ParamName = _nextRunDateTimeField,
+                _context.Settings.Add(new DbClient.Model.Settings() { 
+                   Id = maxId + 1,
+                   ParamName = _nextRunDateTimeField,
                     ParamValue = _nextRunDateTime.ToString()
-                });
+                    });
             }
             _context.SaveChanges();
         }

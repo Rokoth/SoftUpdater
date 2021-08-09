@@ -98,7 +98,7 @@ namespace SoftUpdater.Db.Model
     }
 
     [TableName("load_history")]
-    public class LoadHistory
+    public class LoadHistory : Entity
     {
         
     }

@@ -1,0 +1,19 @@
+﻿@model IEnumerable<SoftUpdater.Contract.Model.LoadHistory>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(s => s.Id)</th>
+                     
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr>
+            <td>@item.Id</td>
+                     
+        </tr>
+        }
+    </tbody>
+</table>

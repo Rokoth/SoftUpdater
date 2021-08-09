@@ -13,12 +13,14 @@ namespace SoftUpdaterClient.Service
         private IServiceProvider _serviceProvider;
         private ILogger _logger;
         private IServiceHelper _serviceHelper;
+        private IBackupService _backupService;
 
         public InstallService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             _logger = _serviceProvider.GetRequiredService<ILogger<InstallService>>();
             _serviceHelper = _serviceProvider.GetRequiredService<IServiceHelper>();
+            _backupService = _serviceProvider.GetRequiredService<IBackupService>();
         }
 
         public bool Install(InstallSettings settings)

@@ -247,6 +247,7 @@ namespace SoftUpdater.Service
             return await ExecuteAsync(async (repo) =>
             {
                 var result = await repo.GetAsync(id, token);
+                if (result == null) throw new Exception("Запись в базе данных не найдена");
                 var prepare = _mapper.Map<Tdto>(result);
                 prepare = await Enrich(prepare, token);
                 return prepare;

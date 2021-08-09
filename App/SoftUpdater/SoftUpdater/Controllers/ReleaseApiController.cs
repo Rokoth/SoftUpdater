@@ -38,7 +38,7 @@ namespace SoftUpdater.Controllers
                 int page = 0;
                 while (!allSelected)
                 {
-                    var selected = await _dataService.GetAsync(new ReleaseFilter(clientId, 100, page++, null, null), source.Token);
+                    var selected = await _dataService.GetAsync(new ReleaseFilter(new List<Guid> { clientId }, 100, page++, null, null), source.Token);
                     result.AddRange(selected.Data);
                     allSelected = selected.PageCount == page;
                 }

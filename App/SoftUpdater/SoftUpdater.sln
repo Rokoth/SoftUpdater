@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUpdaterClient", "SoftUp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbClient", "DbClient\DbClient.csproj", "{953A443A-04F1-4E43-BB30-D98CB4A21170}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientHttpClient", "ClientHttpClient\ClientHttpClient.csproj", "{97D945E4-098C-45A6-92DB-D14561935A9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientHttpClient", "ClientHttpClient\ClientHttpClient.csproj", "{97D945E4-098C-45A6-92DB-D14561935A9D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{F4B4F2C6-62B6-427D-8865-A3487FEA986B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{97D945E4-098C-45A6-92DB-D14561935A9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97D945E4-098C-45A6-92DB-D14561935A9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97D945E4-098C-45A6-92DB-D14561935A9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4B4F2C6-62B6-427D-8865-A3487FEA986B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4B4F2C6-62B6-427D-8865-A3487FEA986B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4B4F2C6-62B6-427D-8865-A3487FEA986B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4B4F2C6-62B6-427D-8865-A3487FEA986B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

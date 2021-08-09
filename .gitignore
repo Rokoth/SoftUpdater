@@ -22,3 +22,6 @@
 /App/SoftUpdater/ClientHttpClient/bin/Debug/netcoreapp3.1
 /App/SoftUpdater/ClientHttpClient/obj
 /App/SoftUpdater/HttpClient/obj
+/App/SoftUpdater/UnitTests/bin/Debug/netcoreapp3.1
+/App/SoftUpdater/UnitTests/obj
+/Docs/TechTask/0.0.1/~$chTask 0.0.13.docx

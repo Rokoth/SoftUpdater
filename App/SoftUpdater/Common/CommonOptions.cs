@@ -34,9 +34,14 @@ namespace SoftUpdater.Common
         public string DownloadedSelfVersionField { get; set; }
         public string InstalledSelfVersionField { get; set; }
         public string NextRunDateTimeField { get; set; }
+        public string NextRunDateTimeSelfField { get; set; }
         public string InstallSchedule { get; set; }
+        public string InstallSelfSchedule { get; set; }
         public string ApplicationDirectory { get; set; }
         public string BackupDirectory { get; set; }
-        
+
+        public string ApplicationSelfDirectory { get; set; }
+        public string BackupSelfDirectory { get; set; }
+
     }
 }

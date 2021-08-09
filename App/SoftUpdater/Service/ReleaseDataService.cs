@@ -17,7 +17,7 @@ namespace SoftUpdater.Service
 
         protected override Expression<Func<Db.Model.Release, bool>> GetFilter(Contract.Model.ReleaseFilter filter)
         {
-            return s => filter.ClientId == null || s.ClientId == filter.ClientId;            
+            return s => filter.Clients.Contains(s.ClientId);            
         }
 
         protected override Db.Model.Release UpdateFillFields(Contract.Model.ReleaseUpdater entity, Db.Model.Release entry)
@@ -58,5 +58,32 @@ namespace SoftUpdater.Service
         }
 
         protected override string DefaultSort => "Name";                
+    }
+
+    public class LoadHistoryDataService : DataService<Db.Model.LoadHistory, Contract.Model.LoadHistory,
+        Contract.Model.LoadHistoryFilter, Contract.Model.LoadHistoryCreator, Contract.Model.LoadHistoryUpdater>
+    {
+        public LoadHistoryDataService(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+
+        }
+
+        protected override Expression<Func<Db.Model.LoadHistory, bool>> GetFilter(Contract.Model.LoadHistoryFilter filter)
+        {
+            return s => true;
+        }
+
+        protected override Db.Model.LoadHistory UpdateFillFields(Contract.Model.LoadHistoryUpdater entity, Db.Model.LoadHistory entry)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override string DefaultSort => "Version";
+
+        protected override async Task<Db.Model.LoadHistory> MapToEntityAdd(Contract.Model.LoadHistoryCreator creator)
+        {
+            var result = await base.MapToEntityAdd(creator);            
+            return result;
+        }
     }
 }

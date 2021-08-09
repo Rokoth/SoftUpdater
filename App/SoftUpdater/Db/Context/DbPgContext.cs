@@ -19,6 +19,9 @@ namespace SoftUpdater.Db.Context
         /// </summary>
         public DbSet<Settings> Settings { get; set; }
 
+        public DbSet<User> Users { get; set; }
+        public DbSet<Client> Clients { get; set; }
+
         /// <summary>
         /// ctor
         /// </summary>

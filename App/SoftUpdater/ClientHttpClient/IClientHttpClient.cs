@@ -15,6 +15,6 @@ namespace SoftUpdater.ClientHttpClient
         void ConnectToServer(string server, Action<bool, bool, string> onResult);
         void Dispose();
         Task<ReleaseClient> GetLastRelease(string currentVersion);
-        Task<FileStream> DownloadRelease(Guid id, string architecture);
+        Task<Stream> DownloadRelease(Guid id);
     }
 }

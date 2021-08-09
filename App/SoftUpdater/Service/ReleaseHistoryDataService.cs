@@ -36,7 +36,7 @@ namespace SoftUpdater.Service
 
         protected override Expression<Func<Db.Model.ReleaseHistory, bool>> GetFilter(Contract.Model.ReleaseHistoryFilter filter)
         {
-            return s => (filter.Name == null || s.Name.Contains(filter.Name))
+            return s => (filter.Version == null || s.Version.Contains(filter.Version))
                 && (filter.Id == null || s.Id == filter.Id);
         }
     }

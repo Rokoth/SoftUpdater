@@ -60,8 +60,9 @@ namespace SoftUpdaterClient.Service
                         }))
                         {
                             var downloadedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _downloadedVersionField);
-                            ReleaseClient release = await _httpClient.GetLastRelease(downloadedVersion.ParamValue, _options.Architecture);
-                            using (FileStream stream = await _httpClient.DownloadRelease(release.Architects.First().Id))
+                            ReleaseClient release = await _httpClient.GetLastRelease(downloadedVersion.ParamValue);
+                            var architect = release.Architects.First(s=>s.Name == _options.Architecture);
+                            using (Stream stream = await _httpClient.DownloadRelease(architect.Id))
                             {
                                 if (!Directory.Exists(_options.ReleasePath))
                                 {
@@ -72,7 +73,7 @@ namespace SoftUpdaterClient.Service
                                 {
                                     Directory.CreateDirectory(releasePath);
                                 }
-                                using (FileStream tmp = new FileStream(Path.Combine(releasePath, stream.Name), FileMode.Create))
+                                using (FileStream tmp = new FileStream(Path.Combine(releasePath, architect.Name), FileMode.Create))
                                 {
                                     stream.CopyTo(tmp);
                                     tmp.Flush();

@@ -1,44 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using System;
 
 namespace SoftUpdater.Db.Attributes
 {
+    /// <summary>
+    /// Атрибут Имя таблицы (используется в контексте БД в методе создания моделей)
+    /// </summary>
     public class TableNameAttribute : Attribute
     {
+        /// <summary>
+        /// Наименование таблицы
+        /// </summary>
         public string Name { get; }
 
         public TableNameAttribute(string name)
-        {
-            Name = name;
-        }
-    }
-
-    public class IgnoreAttribute : Attribute
-    {
-
-    }
-
-    public class PrimaryKeyAttribute : Attribute
-    {
-
-    }
-
-    public class ColumnTypeAttribute : Attribute
-    {
-        public string Name { get; }
-
-        public ColumnTypeAttribute(string name)
-        {
-            Name = name;
-        }
-    }
-
-    public class ColumnNameAttribute : Attribute
-    {
-        public string Name { get; }
-
-        public ColumnNameAttribute(string name)
         {
             Name = name;
         }

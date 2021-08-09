@@ -9,8 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using SoftUpdater.Contract.Model;
-using System.IO;
+
 using System.Net;
+using System.IO;
 
 namespace SoftUpdater.ClientHttpClient
 {
@@ -215,9 +216,40 @@ namespace SoftUpdater.ClientHttpClient
             }
         }
 
-        public Task<FileStream> DownloadRelease(Guid id, string architecture)
+        public async Task<Stream> DownloadRelease(Guid id)
         {
-            throw new NotImplementedException();
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    var request = new HttpRequestMessage()
+                    {
+                        Headers = {
+                            { HttpRequestHeader.Authorization.ToString(), $"Bearer {_token}" },
+                            { HttpRequestHeader.ContentType.ToString(), "application/json" },
+                        },
+                        RequestUri = new Uri($"{GetApi<ReleaseArchitect>()}?id={id}"),
+                        Method = HttpMethod.Get                        
+                    };
+
+                    var response = await client.SendAsync(request);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        HttpContent content = response.Content;
+                        var contentStream = await content.ReadAsStreamAsync(); 
+                        return contentStream;
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error in  DownloadRelease: {ex.Message}; StackTrace: {ex.StackTrace}");
+                    return default;
+                }
+            }            
         }
     }
 

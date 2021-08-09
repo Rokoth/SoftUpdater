@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>0.0.4</Version>
+    <Version>0.0.5</Version>
     <RepositoryUrl>https://github.com/Rokoth/SoftUpdater</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Rokoth/SoftUpdater</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>2021 Dmitriy Rokoth</Copyright>
     <Description>Client app</Description>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
