@@ -22,8 +22,8 @@ namespace SoftUpdaterClient.Service
             _serviceProvider = serviceProvider;
             _logger = _serviceProvider.GetRequiredService<ILogger<ServiceHelper>>();
         }
-
-        public bool DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+               
+        public bool DirectoryCopy(string sourceDirName, string destDirName, List<string> ignoreDirectories, List<string> ignoreFiles, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.
             try
@@ -56,7 +56,7 @@ namespace SoftUpdaterClient.Service
                     foreach (DirectoryInfo subdir in dirs)
                     {
                         string tempPath = Path.Combine(destDirName, subdir.Name);
-                        DirectoryCopy(subdir.FullName, tempPath, copySubDirs);
+                        DirectoryCopy(subdir.FullName, tempPath, ignoreDirectories, ignoreFiles, copySubDirs);
                     }
                 }
                 return true;
@@ -187,5 +187,7 @@ namespace SoftUpdaterClient.Service
 
             return await Execute(batchContent);
         }
+
+        
     }
 }
