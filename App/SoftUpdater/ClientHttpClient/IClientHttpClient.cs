@@ -16,5 +16,6 @@ namespace SoftUpdater.ClientHttpClient
         void Dispose();
         Task<ReleaseClient> GetLastRelease(string currentVersion);
         Task<Stream> DownloadRelease(Guid id);
+        Task<bool> SendErrorMessage(string message);
     }
 }

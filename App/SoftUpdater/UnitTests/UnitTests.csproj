@@ -5,7 +5,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
 
     <Description>UnitTests project</Description>
 
@@ -34,9 +34,11 @@
     <ProjectReference Include="..\ClientHttpClient\ClientHttpClient.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Contract\Contract.csproj" />
+    <ProjectReference Include="..\DbClient\DbClient.csproj" />
     <ProjectReference Include="..\Db\Db.csproj" />
     <ProjectReference Include="..\Deploy\Deploy.csproj" />
     <ProjectReference Include="..\Service\Service.csproj" />
+    <ProjectReference Include="..\SoftUpdaterClient\SoftUpdaterClient.csproj" />
     <ProjectReference Include="..\SoftUpdater\SoftUpdater.csproj" />
   </ItemGroup>
 

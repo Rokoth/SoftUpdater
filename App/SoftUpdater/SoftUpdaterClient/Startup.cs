@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SoftUpdater.ClientHttpClient;
 using SoftUpdater.Common;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,8 @@ namespace SoftUpdater.SoftUpdaterClient
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CommonOptions>(Configuration);           
+            services.Configure<CommonOptions>(Configuration);
+            services.AddScoped<IClientHttpClient, ClientHttpClient.ClientHttpClient>();
             services.AddLogging();
             services.AddCors();                        
             services.ConfigureAutoMapper();            

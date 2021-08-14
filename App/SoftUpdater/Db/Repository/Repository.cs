@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq.Dynamic.Core;
+using SoftUpdater.Common;
 
 namespace SoftUpdater.Db.Repository
 {
@@ -24,6 +25,7 @@ namespace SoftUpdater.Db.Repository
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
+        private readonly IErrorNotifyService _errorNotifyService;
 
         /// <summary>
         /// ctor
@@ -33,6 +35,7 @@ namespace SoftUpdater.Db.Repository
         {
             _serviceProvider = serviceProvider;
             _logger = _serviceProvider.GetRequiredService<ILogger<Repository<T>>>();
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         /// <summary>
@@ -175,6 +178,7 @@ namespace SoftUpdater.Db.Repository
             catch (Exception ex)
             {
                 _logger.LogError($"Ошибка в методе {method} Repository: {ex.Message} {ex.StackTrace}");
+                await _errorNotifyService.Send($"Ошибка в методе {method} Repository: {ex.Message} {ex.StackTrace}");
                 throw new RepositoryException($"Ошибка в методе {method} Repository: {ex.Message}");
             }
         }

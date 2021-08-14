@@ -12,6 +12,7 @@ using SoftUpdater.Contract.Model;
 
 using System.Net;
 using System.IO;
+using SoftUpdater.Common;
 
 namespace SoftUpdater.ClientHttpClient
 {
@@ -90,16 +91,66 @@ namespace SoftUpdater.ClientHttpClient
         public async Task<bool> Auth(ClientIdentity identity)
         {
             var result = await Execute(client =>
-                client.PostAsync($"{GetApi<ClientIdentity>()}", identity.SerializeRequest()), "Post", s => s.ParseResponse<ClientIdentityResponse>());
-            if (result == null) return false;
-            _token = result.Token;
+                client.PostAsync($"{GetApi<ClientIdentity>()}", identity.SerializeRequest()), "Post", s => s.ParseResponse<ClientIdentityResponse>(), false);
+            if (result.ResponseCode == ResponseEnum.Error) return false;
+            _token = result.ResponseBody.Token;
             return true;
         }
-                
+
+        public async Task<bool> SendErrorMessage(string message)
+        {
+            var result = (await Execute(client =>
+            {
+                var request = new HttpRequestMessage()
+                {
+                    Headers = {
+                            { HttpRequestHeader.Authorization.ToString(), $"Bearer {_token}" },
+                            { HttpRequestHeader.ContentType.ToString(), "application/json" },
+                        },
+                    RequestUri = new Uri($"{_server}/api/v1/common/send_error"),
+                    Method = HttpMethod.Post,
+                    Content = new ErrorNotifyMessage()
+                    { 
+                       Message = message,
+                       MessageLevel = MessageLevelEnum.Error,
+                       Title = "Ошибка в SoftUpdater client"
+                    }.SerializeRequest()
+                };
+
+                return client.SendAsync(request);
+            }, "SendErrorMessage", async s => {
+                await Task.CompletedTask;
+                if (s.IsSuccessStatusCode)
+                {                    
+                    return new Response<object> { 
+                      ResponseCode = ResponseEnum.OK
+                    };
+                }
+                if (s.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return new Response<object>
+                    {
+                        ResponseCode = ResponseEnum.NeedAuth
+                    };
+                }
+                return new Response<object>
+                {
+                    ResponseCode = ResponseEnum.Error
+                };
+            }));
+
+
+            if (result.ResponseCode != ResponseEnum.Error)
+            {
+                return true;
+            }
+            return false;
+        }
+
         private async Task<T> Execute<T>(
             Func<HttpClient, Task<HttpResponseMessage>> action,
             string method,
-            Func<HttpResponseMessage, Task<T>> parseMethod)
+            Func<HttpResponseMessage, Task<T>> parseMethod, bool needAuth = true)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -174,17 +225,18 @@ namespace SoftUpdater.ClientHttpClient
                 };
 
                 return client.SendAsync(request);
-            },
-                "GetReleases", s => s.ParseResponseArray<ReleaseClient>())).ToList();
+            }, "GetReleases", s => s.ParseResponseArray<ReleaseClient>()));
 
-            if (result != null && result.Any())
+
+            if (result.ResponseCode != ResponseEnum.Error)
             {
-                var lastVersion = result.First();
-                for (int i = 1; i < result.Count(); i++)
+                var resp = result.ResponseBody.ToList();
+                var lastVersion = resp.First();
+                for (int i = 1; i < resp.Count(); i++)
                 {
-                    if (VersionCompare(result[i].Version, lastVersion.Version))
+                    if (VersionCompare(resp[i].Version, lastVersion.Version))
                     {
-                        lastVersion = result[i];
+                        lastVersion = resp[i];
                     }
                 }
                 return lastVersion;
@@ -247,7 +299,7 @@ namespace SoftUpdater.ClientHttpClient
                 catch (Exception ex)
                 {
                     _logger.LogError($"Error in  DownloadRelease: {ex.Message}; StackTrace: {ex.StackTrace}");
-                    return default;
+                    return null;
                 }
             }            
         }
@@ -263,38 +315,5 @@ namespace SoftUpdater.ClientHttpClient
 
 
 
-    public static class HttpApiHelper
-    {
-        public static StringContent SerializeRequest<TReq>(this TReq entity)
-        {
-            var json = JsonConvert.SerializeObject(entity);
-            var data = new StringContent(json, Encoding.UTF8, "application/json");
-            return data;
-        }
-
-        public static async Task<TResp> ParseResponse<TResp>(this HttpResponseMessage result) where TResp : class
-        {
-            if (result != null && result.IsSuccessStatusCode)
-            {
-                var response = await result.Content.ReadAsStringAsync();
-                return JObject.Parse(response).ToObject<TResp>();
-            }
-            return null;
-        }
-
-        public static async Task<IEnumerable<T>> ParseResponseArray<T>(this HttpResponseMessage result) where T : class
-        {
-            if (result != null && result.IsSuccessStatusCode)
-            {
-                var ret = new List<T>();
-                var response = await result.Content.ReadAsStringAsync();
-                foreach (var item in JArray.Parse(response))
-                {
-                    ret.Add(item.ToObject<T>());
-                }                
-                return ret;
-            }
-            return null;
-        }
-    }
+    
 }

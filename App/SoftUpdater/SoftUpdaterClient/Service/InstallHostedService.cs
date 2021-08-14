@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SoftUpdater.ClientHttpClient;
 using SoftUpdater.Common;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ namespace SoftUpdaterClient.Service
         private string _installedVersionField;
         private ClientOptions _options;
         private ILogger _logger;
+        private IClientHttpClient httpClient;
 
         public InstallHostedService(IServiceProvider serviceProvider)
         {
@@ -38,6 +40,7 @@ namespace SoftUpdaterClient.Service
             _nextRunDateTimeField = _options.NextRunDateTimeField;
             _expression = CronExpression.Parse(_options.InstallSchedule);
             _logger = _serviceProvider.GetRequiredService<ILogger<InstallHostedService>>();
+            httpClient = _serviceProvider.GetRequiredService<IClientHttpClient>();
             GetNextRunDateTime();
         }
 
@@ -93,6 +96,7 @@ namespace SoftUpdaterClient.Service
                     }
                     catch (Exception ex)
                     {
+                        await httpClient.SendErrorMessage($"Ошибка при обновлении сервиса: {ex.Message} {ex.StackTrace}");
                         _logger.LogError($"Ошибка при обновлении сервиса: {ex.Message} {ex.StackTrace}");
                     }
                     finally

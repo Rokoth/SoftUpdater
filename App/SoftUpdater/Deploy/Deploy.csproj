@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>0.0.5</Version>
+    <Version>0.0.6</Version>
     <Description>Deploy lib wrapper</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/Rokoth/SoftUpdater</RepositoryUrl>

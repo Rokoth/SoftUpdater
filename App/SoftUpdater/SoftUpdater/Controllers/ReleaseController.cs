@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
@@ -14,10 +15,12 @@ namespace SoftUpdater.Controllers
     public class ReleaseController : Controller
     {
         private IServiceProvider _serviceProvider;
+        private readonly IErrorNotifyService _errorNotifyService;
 
         public ReleaseController(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         // GET: UserController
@@ -55,6 +58,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::ListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -79,6 +83,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::Edit: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -98,6 +103,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::Edit: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -123,6 +129,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::HistoryListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -140,6 +147,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::Details: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -180,6 +188,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::Create: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -197,6 +206,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::Delete: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -216,6 +226,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseController::Delete: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }

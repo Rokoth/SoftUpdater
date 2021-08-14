@@ -41,6 +41,7 @@ namespace SoftUpdater.SoftUpdaterHost
             services.Configure<CommonOptions>(Configuration);
             services.AddControllersWithViews();
             services.AddLogging();
+            services.AddSingleton<IErrorNotifyService, ErrorNotifyService>();
             services.AddDbContextPool<DbPgContext>((opt) =>
             {
                 opt.EnableSensitiveDataLogging();

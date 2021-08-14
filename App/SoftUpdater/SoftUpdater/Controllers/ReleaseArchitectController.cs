@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
@@ -14,10 +15,12 @@ namespace SoftUpdater.Controllers
     public class ReleaseArchitectController : Controller
     {
         private IServiceProvider _serviceProvider;
+        private readonly IErrorNotifyService _errorNotifyService;
 
         public ReleaseArchitectController(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         // GET: UserController
@@ -40,6 +43,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::ListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }

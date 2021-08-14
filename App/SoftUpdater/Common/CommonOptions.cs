@@ -14,6 +14,7 @@ namespace SoftUpdater.Common
         /// Строка подключения к базе данных
         /// </summary>
         public string ConnectionString { get; set; }
+        public ErrorNotifyOptions ErrorNotifyOptions { get; set; }
     }
 
     public class ClientOptions: CommonOptions
@@ -42,6 +43,16 @@ namespace SoftUpdater.Common
 
         public string ApplicationSelfDirectory { get; set; }
         public string BackupSelfDirectory { get; set; }
+        
+    }
 
+    public class ErrorNotifyOptions
+    {
+        public bool SendError { get; set; }
+        public string Server { get; set; }
+        public string Login { get; set; }
+        public string Password { get; set; }
+        public string FeedbackContact { get; set; }
+        public string DefaultTitle { get; set; }
     }
 }

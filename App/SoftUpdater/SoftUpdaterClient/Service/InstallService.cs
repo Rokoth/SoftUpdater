@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUpdater.ClientHttpClient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +15,7 @@ namespace SoftUpdaterClient.Service
         private ILogger _logger;
         private IServiceHelper _serviceHelper;
         private IBackupService _backupService;
+        private IClientHttpClient httpClient;
 
         public InstallService(IServiceProvider serviceProvider)
         {
@@ -21,6 +23,7 @@ namespace SoftUpdaterClient.Service
             _logger = _serviceProvider.GetRequiredService<ILogger<InstallService>>();
             _serviceHelper = _serviceProvider.GetRequiredService<IServiceHelper>();
             _backupService = _serviceProvider.GetRequiredService<IBackupService>();
+            httpClient = _serviceProvider.GetRequiredService<IClientHttpClient>();
         }
 
         public bool Install(InstallSettings settings)
@@ -56,6 +59,7 @@ namespace SoftUpdaterClient.Service
             }
             catch (Exception ex)
             {
+                httpClient.SendErrorMessage($"Ошибка при установке: {ex.Message} {ex.StackTrace}");
                 _logger.LogError($"Ошибка при установке обновления: {ex.Message} {ex.StackTrace}");
                 if (!RollBack(settings.AppDir, settings.BackupDir))
                 {
@@ -74,6 +78,7 @@ namespace SoftUpdaterClient.Service
             }
             catch (Exception ex)
             {
+                httpClient.SendErrorMessage($"Ошибка при резервном копировании: {ex.Message} {ex.StackTrace}");
                 _logger.LogError($"Ошибка при установке обновления: {ex.Message} {ex.StackTrace}");
                 return false;
             }

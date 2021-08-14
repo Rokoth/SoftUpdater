@@ -23,14 +23,16 @@ namespace SoftUpdater.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IServiceProvider _serviceProvider;
-        
+        private readonly IErrorNotifyService _errorNotifyService;
+
         /// <summary>
         /// ctor
         /// </summary>
         /// <param name="serviceProvider"></param>
         public AuthController(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;           
+            _serviceProvider = serviceProvider;
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         /// <summary>
@@ -73,6 +75,7 @@ namespace SoftUpdater.Controllers
             }            
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе AuthController::Auth: {ex.Message} {ex.StackTrace}");
                 return BadRequest($"Ошибка при обработке запроса: {ex.Message}");
             }
         }

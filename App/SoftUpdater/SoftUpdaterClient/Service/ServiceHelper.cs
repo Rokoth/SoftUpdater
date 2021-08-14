@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUpdater.ClientHttpClient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,11 +17,13 @@ namespace SoftUpdaterClient.Service
     {
         private IServiceProvider _serviceProvider;
         private ILogger _logger;
+        private IClientHttpClient httpClient;
 
         public ServiceHelper(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             _logger = _serviceProvider.GetRequiredService<ILogger<ServiceHelper>>();
+            httpClient = _serviceProvider.GetRequiredService<IClientHttpClient>();
         }
                
         public bool DirectoryCopy(string sourceDirName, string destDirName, List<string> ignoreDirectories, List<string> ignoreFiles, bool copySubDirs)
@@ -63,6 +66,7 @@ namespace SoftUpdaterClient.Service
             }
             catch (Exception ex)
             {
+                httpClient.SendErrorMessage($"Ошибка DirectoryCopy: {ex.Message} {ex.StackTrace}");
                 _logger.LogError($"Ошибка при копировании каталога: {ex.Message} {ex.StackTrace}");
                 return false;
             }
@@ -96,6 +100,7 @@ namespace SoftUpdaterClient.Service
             }
             catch (Exception ex)
             {
+                httpClient.SendErrorMessage($"Ошибка ExecuteCommand: {ex.Message} {ex.StackTrace}");
                 _logger.LogError($"Ошибка при выполнении команды: {ex.Message} {ex.StackTrace}");
                 return false;
             }
@@ -139,6 +144,7 @@ namespace SoftUpdaterClient.Service
                 }
                 catch (Exception ex)
                 {
+                    httpClient.SendErrorMessage($"Ошибка при выполнении команды: {ex.Message} {ex.StackTrace}");
                     _logger.LogError($"Ошибка при выполнении команды: {ex.Message} {ex.StackTrace}");
                     return false;
                 }

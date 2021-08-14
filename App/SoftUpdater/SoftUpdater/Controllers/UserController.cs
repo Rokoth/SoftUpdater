@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
@@ -14,10 +15,12 @@ namespace SoftUpdater.Controllers
     public class UserController : Controller
     {
         private IServiceProvider _serviceProvider;
+        private readonly IErrorNotifyService _errorNotifyService;
 
         public UserController(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         // GET: UserController
@@ -40,6 +43,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::ListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -64,6 +68,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::HistoryListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -81,6 +86,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::Details: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -112,6 +118,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::Create: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -137,6 +144,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::Edit: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -156,6 +164,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::Edit: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -173,6 +182,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::Delete: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -192,6 +202,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе UserController::Delete: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }

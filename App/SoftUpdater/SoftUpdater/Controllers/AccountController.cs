@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
+using SoftUpdater.Common;
 
 namespace SoftUpdater.TaskCollector.Controllers
 {
@@ -22,9 +23,12 @@ namespace SoftUpdater.TaskCollector.Controllers
     public class AccountController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IErrorNotifyService _errorNotifyService;
+
         public AccountController(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
         
         // GET: AccountController/Login
@@ -71,6 +75,7 @@ namespace SoftUpdater.TaskCollector.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе AccountController::Login: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { ex.Message });
             }
         }
@@ -90,6 +95,7 @@ namespace SoftUpdater.TaskCollector.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе AccountController::Logout: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { ex.Message });
             }
         }

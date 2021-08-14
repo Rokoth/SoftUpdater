@@ -12,6 +12,7 @@ using Xunit;
 
 namespace TaskCollector.UnitTests
 {
+
     /// <summary>
     /// Тесты методов репозиториев БД
     /// </summary>

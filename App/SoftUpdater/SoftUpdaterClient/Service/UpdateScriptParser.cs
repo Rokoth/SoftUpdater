@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUpdater.ClientHttpClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +15,13 @@ namespace SoftUpdaterClient.Service
         private readonly string[] _functionWords = new string[] {
            "or", "and", "not"
         };
-
+        private IClientHttpClient httpClient;
 
         public UpdateScriptParser(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             _logger = _serviceProvider.GetRequiredService<ILogger<UpdateScriptParser>>();
+            httpClient = _serviceProvider.GetRequiredService<IClientHttpClient>();
         }
 
         public List<Command> Parse(string[] rows)
@@ -79,6 +81,7 @@ namespace SoftUpdaterClient.Service
             }
             catch (Exception ex)
             {
+                httpClient.SendErrorMessage($"Ошибка парсинга скрипта: {ex.Message} {ex.StackTrace}");
                 _logger.LogError($"Ошибка парсинга скрипта: {ex.Message} {ex.StackTrace}");
             }
             return result;
@@ -86,47 +89,50 @@ namespace SoftUpdaterClient.Service
 
         private ConditionExpression BuildCommandCondition(List<ILiteral> conditionList)
         {
-            if (!conditionList.Any())
+            try
             {
-                return new ConditionExpression()
+                if (!conditionList.Any())
                 {
-                    ConditionEnum = ConditionEnum.None,
-                    Result = true
-                };
-            }
-            var first = conditionList.First();
-            var last = conditionList.Last();
-            if (first.LiteralType != LiteralTypeEnum.BraceOpen) throw new Exception("Выражение условия должно начинаться с символа (");
-            if (last.LiteralType != LiteralTypeEnum.BraceClose) throw new Exception("Выражение условия должно заканчиваться символом )");
-            if(conditionList.Count<3) throw new Exception("Условие не содержит выражение");
-
-            conditionList.RemoveAt(0);
-            conditionList.RemoveAt(conditionList.Count-1);
-           
-            for(int i = 0; i < conditionList.Count;i++)
-            {
-                var condition = conditionList[i];
-                if (condition is CommandExpLiteral command)
-                {
-                    conditionList[i] = new ExpressionLiteral(new ConditionExpression() { 
-                      CommandId = command.CommandId,
-                      ConditionEnum = ConditionEnum.Command
-                    });
+                    return new ConditionExpression()
+                    {
+                        ConditionEnum = ConditionEnum.None,
+                        Result = true
+                    };
                 }
-                else if (condition.LiteralType == LiteralTypeEnum.Command || condition.LiteralType == LiteralTypeEnum.Custom
-                    || condition.LiteralType == LiteralTypeEnum.Delimiter)
+                var first = conditionList.First();
+                var last = conditionList.Last();
+                if (first.LiteralType != LiteralTypeEnum.BraceOpen) throw new Exception("Выражение условия должно начинаться с символа (");
+                if (last.LiteralType != LiteralTypeEnum.BraceClose) throw new Exception("Выражение условия должно заканчиваться символом )");
+                if (conditionList.Count < 3) throw new Exception("Условие не содержит выражение");
+
+                conditionList.RemoveAt(0);
+                conditionList.RemoveAt(conditionList.Count - 1);
+
+                for (int i = 0; i < conditionList.Count; i++)
                 {
-                    throw new Exception("Не удалось распарсить выражение условия");
+                    var condition = conditionList[i];
+                    if (condition is CommandExpLiteral command)
+                    {
+                        conditionList[i] = new ExpressionLiteral(new ConditionExpression()
+                        {
+                            CommandId = command.CommandId,
+                            ConditionEnum = ConditionEnum.Command
+                        });
+                    }
+                    else if (condition.LiteralType == LiteralTypeEnum.Command || condition.LiteralType == LiteralTypeEnum.Custom
+                        || condition.LiteralType == LiteralTypeEnum.Delimiter)
+                    {
+                        throw new Exception("Не удалось распарсить выражение условия");
+                    }
                 }
-            }
 
-            int cursor = 0;
+                int cursor = 0;
 
-            List<Func<bool>> transformFunctions = new List<Func<bool>>()
+                List<Func<bool>> transformFunctions = new List<Func<bool>>()
             {
                 // not + exp => notExp
-               ()=>{                  
-                  if(conditionList[cursor] is ServiceWordLiteral serviceWord && 
+               ()=>{
+                  if(conditionList[cursor] is ServiceWordLiteral serviceWord &&
                         serviceWord.ServiceWordEnum == ServiceWordEnum.Not &&
                         conditionList.Count > cursor + 1 &&
                         conditionList[cursor + 1] is ExpressionLiteral expressionLiteral)
@@ -152,19 +158,6 @@ namespace SoftUpdaterClient.Service
                         conditionList.Count > cursor + 2 &&
                         conditionList[cursor + 2].LiteralType == LiteralTypeEnum.BraceClose &&
                         conditionList[cursor + 1] is ExpressionLiteral expressionLiteral)
-                  {                       
-                       conditionList.RemoveAt(cursor+2);
-                       conditionList.RemoveAt(cursor);                      
-                       return true;
-                  }
-                  return false;
-               },
-               //todo: exp or exp => exp
-               ()=>{
-                  if(conditionList[cursor].LiteralType == LiteralTypeEnum.BraceOpen &&
-                        conditionList.Count > cursor + 2 &&
-                        conditionList[cursor + 2].LiteralType == LiteralTypeEnum.BraceClose &&
-                        conditionList[cursor + 1] is ExpressionLiteral expressionLiteral)
                   {
                        conditionList.RemoveAt(cursor+2);
                        conditionList.RemoveAt(cursor);
@@ -172,184 +165,96 @@ namespace SoftUpdaterClient.Service
                   }
                   return false;
                },
-               //todo: exp and exp => exp
+               //exp or exp => exp
                ()=>{
-                  if(conditionList[cursor].LiteralType == LiteralTypeEnum.BraceOpen &&
-                        conditionList.Count > cursor + 2 &&
-                        conditionList[cursor + 2].LiteralType == LiteralTypeEnum.BraceClose &&
-                        conditionList[cursor + 1] is ExpressionLiteral expressionLiteral)
+                  if(conditionList.Count > cursor + 2
+                       && conditionList[cursor] is ExpressionLiteral expressionLiteral1
+                       && conditionList[cursor + 2] is ExpressionLiteral expressionLiteral2
+                       && conditionList[cursor + 1] is ServiceWordLiteral wordLiteral
+                       && wordLiteral.ServiceWordEnum == ServiceWordEnum.Or
+                       && (cursor == 0
+                            || conditionList[cursor-1].LiteralType == LiteralTypeEnum.BraceOpen
+                            || (conditionList[cursor-1] is ServiceWordLiteral wordLiteral2 && wordLiteral2.ServiceWordEnum == ServiceWordEnum.Or))
+                       && (conditionList.Count == cursor + 3
+                            || conditionList[cursor + 3].LiteralType == LiteralTypeEnum.BraceClose
+                            || (conditionList[cursor + 3] is ServiceWordLiteral wordLiteral3 && wordLiteral3.ServiceWordEnum == ServiceWordEnum.Or)))
                   {
+                        var newExpression = new ConditionExpression()
+                       {
+                           ConditionEnum = ConditionEnum.Or,
+                           Conditions = new List<ConditionExpression>()
+                           {
+                              expressionLiteral1.Expression, expressionLiteral2.Expression
+                           }
+                       };
                        conditionList.RemoveAt(cursor+2);
+                       conditionList.RemoveAt(cursor+1);
                        conditionList.RemoveAt(cursor);
+                       conditionList.Insert(cursor, new ExpressionLiteral(newExpression));
+                       return true;
+                  }
+                  return false;
+               },
+               //exp and exp => exp
+               ()=>{
+                  if( conditionList.Count > cursor + 2
+                       && conditionList[cursor] is ExpressionLiteral expressionLiteral1
+                       && conditionList[cursor + 2] is ExpressionLiteral expressionLiteral2
+                       && conditionList[cursor + 1] is ServiceWordLiteral wordLiteral
+                       && wordLiteral.ServiceWordEnum == ServiceWordEnum.And )
+                  {
+                       var newExpression = new ConditionExpression()
+                       {
+                           ConditionEnum = ConditionEnum.And,
+                           Conditions = new List<ConditionExpression>()
+                           {
+                              expressionLiteral1.Expression, expressionLiteral2.Expression
+                           }
+                       };
+                       conditionList.RemoveAt(cursor+2);
+                       conditionList.RemoveAt(cursor+1);
+                       conditionList.RemoveAt(cursor);
+                       conditionList.Insert(cursor, new ExpressionLiteral(newExpression));
                        return true;
                   }
                   return false;
                }
             };
-            
-            bool isChanged = true;
 
-            while (isChanged)
-            {
-                isChanged = false;
-                var firstLiteral = conditionList[cursor];
-                var secondLiteral = conditionList[cursor + 1];                
-                var thirdLiteral = conditionList[cursor + 2];
+                bool isChanged = true;
 
-                if (firstLiteral.LiteralType == LiteralTypeEnum.BraceOpen)
+                while (isChanged)
                 {
-                    if (secondLiteral.LiteralType == LiteralTypeEnum.BraceOpen)
+                    isChanged = false;
+                    cursor = 0;
+                    while (conditionList.Count > 1 && cursor < conditionList.Count - 1)
                     {
-                        cursor++;
-                        continue;
-                    }
-                    if (thirdLiteral.LiteralType == LiteralTypeEnum.BraceClose)
-                    {
-                        if (secondLiteral.LiteralType == LiteralTypeEnum.Expression)
+                        bool changedCycle = false;
+                        foreach (var func in transformFunctions)
                         {
-                            conditionList.RemoveAt(cursor + 2);
-                            conditionList.RemoveAt(cursor);
-                            cursor = 0;
-                            continue;
+                            if (func())
+                            {
+                                isChanged = true;
+                                changedCycle = true;
+                            }
                         }
-                        else
-                        {
-                            throw new Exception("Не удалось распарсить выражение условия");
-                        }
-                    }
-                    else
-                    {
-                        cursor++;
-                        continue;
-                    }
-                }
-                else if (firstLiteral.LiteralType == LiteralTypeEnum.CommandExp)
-                {
-                    var command = firstLiteral as CommandExpLiteral;
-                    conditionList[cursor] = new ExpressionLiteral(new ConditionExpression()
-                    {
-                        CommandId = command.CommandId,
-                        ConditionEnum = ConditionEnum.Command
-                    });
-                }
-                else if (firstLiteral.LiteralType == LiteralTypeEnum.Expression)
-                {
-                    if (secondLiteral.LiteralType != LiteralTypeEnum.ServiceWord) throw new Exception("Не удалось распарсить выражение условия");
-                    if (thirdLiteral.LiteralType == LiteralTypeEnum.Expression)
-                    {
-                        var serviceWord = secondLiteral as ServiceWordLiteral;
-                        switch (serviceWord.ServiceWordEnum)
-                        {
-                            case ServiceWordEnum.And:
-                                var newExpression = new ConditionExpression()
-                                {
-                                    ConditionEnum = ConditionEnum.And,
-                                    Conditions = new List<ConditionExpression>()
-                                    { 
-                                       ((ExpressionLiteral)firstLiteral).Expression,
-                                       ((ExpressionLiteral)thirdLiteral).Expression
-                                    }
-                                };
-                                conditionList.RemoveAt(cursor + 2);
-                                conditionList.RemoveAt(cursor + 1);
-                                conditionList.RemoveAt(cursor);
-                                conditionList.Insert(cursor, new ExpressionLiteral(newExpression));
-                                cursor = 0;
-                                continue;
-                            case ServiceWordEnum.Or:
-                                if (cursor + 3 >= conditionList.Count)
-                                {
-                                    var newExpression2 = new ConditionExpression()
-                                    {
-                                        ConditionEnum = ConditionEnum.Or,
-                                        Conditions = new List<ConditionExpression>()
-                                        {
-                                           ((ExpressionLiteral)firstLiteral).Expression,
-                                           ((ExpressionLiteral)thirdLiteral).Expression
-                                        }
-                                    };
-                                    conditionList.RemoveAt(cursor + 2);
-                                    conditionList.RemoveAt(cursor + 1);
-                                    conditionList.RemoveAt(cursor);
-                                    conditionList.Insert(cursor, new ExpressionLiteral(newExpression2));
-                                    cursor = 0;
-                                    continue;
-                                }
-                                else
-                                {
-                                    cursor += 3;
-                                    continue;
-                                }
-                               
-                            case ServiceWordEnum.Not: throw new Exception("Не удалось распарсить выражение условия");
-                        }
-                    }
-                    else if (thirdLiteral.LiteralType == LiteralTypeEnum.CommandExp)
-                    {
-                        var command = thirdLiteral as CommandExpLiteral;
-                        conditionList[cursor+2] = new ExpressionLiteral(new ConditionExpression()
-                        {
-                            CommandId = command.CommandId,
-                            ConditionEnum = ConditionEnum.Command
-                        });
-                        continue;
-                    }
-                    else if (thirdLiteral.LiteralType == LiteralTypeEnum.BraceOpen)
-                    {
-                        cursor += 2;
-                        continue;
-                    }
-                    else
-                    {
-                        throw new Exception("Не удалось распарсить выражение условия");
-                    }
-                }
-                else if (firstLiteral.LiteralType == LiteralTypeEnum.ServiceWord)
-                {
-                    var serviceWord = firstLiteral as ServiceWordLiteral;
-                    if (serviceWord.ServiceWordEnum == ServiceWordEnum.Not)
-                    {
-                        if (secondLiteral.LiteralType == LiteralTypeEnum.BraceOpen)
+                        if (!changedCycle)
                         {
                             cursor++;
-                            continue;
                         }
-                        else if (secondLiteral.LiteralType == LiteralTypeEnum.Expression)
-                        {
-                            var newExpression = new ConditionExpression()
-                            {
-                                ConditionEnum = ConditionEnum.Not,
-                                Conditions = new List<ConditionExpression>
-                                {
-                                   ((ExpressionLiteral)secondLiteral).Expression
-                                }
-                            };
-                            conditionList.RemoveAt(cursor + 1);
-                            conditionList.RemoveAt(cursor);
-                            conditionList.Insert(cursor, new ExpressionLiteral(newExpression));
-                            cursor = 0;
-                            continue;
-                        }
-                        else
-                        {
-                            throw new Exception("Не удалось распарсить выражение условия");
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception("Не удалось распарсить выражение условия");
                     }
                 }
-                else
+                if (conditionList.Count == 1 && conditionList[0] is ExpressionLiteral expression)
                 {
-                    throw new Exception("Не удалось распарсить выражение условия");
+                    return expression.Expression;
                 }
+                throw new Exception("Не удалось распарсить выражение условия");
             }
-            if (conditionList[0] is ExpressionLiteral expression)
+            catch (Exception ex)
             {
-                return expression.Expression;
+                httpClient.SendErrorMessage($"Ошибка парсинга скрипта: {ex.Message} {ex.StackTrace}");
+                throw;
             }
-            throw new Exception("Не удалось распарсить выражение условия");
         }
                 
         private string GetNextWord(string row, ref int cursor)

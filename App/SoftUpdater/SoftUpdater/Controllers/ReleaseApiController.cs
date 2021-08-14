@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
@@ -17,11 +18,13 @@ namespace SoftUpdater.Controllers
     [ApiController]
     public class ReleaseApiController : CommonControllerBase
     {
-        private IServiceProvider _serviceProvider;        
+        private IServiceProvider _serviceProvider;
+        private readonly IErrorNotifyService _errorNotifyService;
 
         public ReleaseApiController(IServiceProvider serviceProvider): base(serviceProvider)
         {
-            _serviceProvider = serviceProvider;            
+            _serviceProvider = serviceProvider;
+            _errorNotifyService = serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         [Authorize]
@@ -52,6 +55,7 @@ namespace SoftUpdater.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Ошибка при получении списка релизов: {ex.Message} {ex.StackTrace}");
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseApiController::GetReleases: {ex.Message} {ex.StackTrace}");
                 return InternalServerError($"Ошибка при получении списка релизов: {ex.Message}");                
             }
         }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
@@ -21,6 +22,7 @@ namespace SoftUpdater.Controllers
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
+        private readonly IErrorNotifyService _errorNotifyService;
 
         /// <summary>
         /// ctor
@@ -30,6 +32,7 @@ namespace SoftUpdater.Controllers
         {
             _serviceProvider = serviceProvider;
             _logger = serviceProvider.GetRequiredService<ILogger<LoadHistoryController>>();
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         /// <summary>
@@ -64,6 +67,7 @@ namespace SoftUpdater.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Ошибка в методе получения истории загрузок: {ex.Message} \r\n {ex.StackTrace} ");
+                await _errorNotifyService.Send($"Ошибка в методе LoadHistoryController::ListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { ex.Message });
             }
         }

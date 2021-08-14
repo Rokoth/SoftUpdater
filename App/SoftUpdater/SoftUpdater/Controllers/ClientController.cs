@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
@@ -19,6 +20,7 @@ namespace SoftUpdater.Controllers
     public class ClientController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IErrorNotifyService _errorNotifyService;
         /// <summary>
         /// ctor
         /// </summary>
@@ -26,6 +28,7 @@ namespace SoftUpdater.Controllers
         public ClientController(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
         // GET: ClientController
@@ -61,6 +64,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::ListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { ex.Message });
             }
         }
@@ -87,6 +91,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Edit: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -107,6 +112,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Edit: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -131,6 +137,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::HistoryListPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -148,6 +155,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Details: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -165,6 +173,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Simple: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -194,6 +203,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Create: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -211,6 +221,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Delete: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -230,6 +241,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::Delete: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
@@ -252,6 +264,7 @@ namespace SoftUpdater.Controllers
             }
             catch (Exception ex)
             {
+                await _errorNotifyService.Send($"Ошибка в методе ClientController::ListSelectPaged: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }

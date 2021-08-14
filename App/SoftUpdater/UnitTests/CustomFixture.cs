@@ -19,6 +19,7 @@ using SoftUpdater.SoftUpdaterHost;
 
 namespace TaskCollector.UnitTests
 {
+
     public class CustomFixture : IDisposable
     {
         public string ConnectionString { get; private set; }

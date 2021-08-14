@@ -88,6 +88,7 @@ namespace SoftUpdaterClient.Service
                     }
                     catch (Exception ex)
                     {
+                        await _httpClient.SendErrorMessage($"Ошибка в CheckUpdatesHostedService: {ex.Message} {ex.StackTrace}");
                         _logger.LogError($"Ошибка в CheckUpdatesHostedService: {ex.Message} {ex.StackTrace}");
                     }
                 }
