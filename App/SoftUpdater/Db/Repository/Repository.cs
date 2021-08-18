@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq.Dynamic.Core;
 using SoftUpdater.Common;
+using System.Collections.Generic;
 
 namespace SoftUpdater.Db.Repository
 {
@@ -97,18 +98,27 @@ namespace SoftUpdater.Db.Repository
         {
             return await ExecuteAsync(async (context) =>
             {
+                var pageCount = 1;
                 var all = context.Set<T>().Where(filter.Selector);
                 if(!withDeleted) all = all.Where(s => !s.IsDeleted);
                 if (!string.IsNullOrEmpty(filter.Sort))
                 {
                     all = all.OrderBy(filter.Sort);
                 }
-                var result = await all
-                    .Skip(filter.Size * filter.Page)
-                    .Take(filter.Size)
-                    .ToListAsync();
                 var count = await all.CountAsync();
-                var pageCount = Math.Max(((count % filter.Size) == 0) ? (count / filter.Size) : ((count / filter.Size) + 1), 1);
+                List<T> result;
+                if (filter.Size.HasValue)
+                {
+                    result = await all
+                        .Skip(filter.Size.Value * filter.Page ?? 0)
+                        .Take(filter.Size.Value)
+                        .ToListAsync();
+                    pageCount = Math.Max(((count % filter.Size.Value) == 0) ? (count / filter.Size.Value) : ((count / filter.Size.Value) + 1), 1);
+                }
+                else
+                {
+                    result = await all.ToListAsync();
+                }                                
                 return new Contract.Model.PagedResult<T>(result, pageCount);
             }, methodName, false);
         }        

@@ -92,6 +92,34 @@ namespace TaskCollector.UnitTests
         }
 
         /// <summary>
+        /// Тест добавления сущности
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task UpdateTest()
+        {
+            var context = _serviceProvider.GetRequiredService<DbPgContext>();
+            var repo = _serviceProvider.GetRequiredService<IRepository<User>>();
+            var user = CreateUser("user_{0}", "user_description_{0}", "user_login_{0}", "user_password_{0}");
+            var newName = user.Name + "changed";
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            user.Name = newName;
+            var result = await repo.UpdateAsync(user, true, CancellationToken.None);
+            Assert.NotNull(result);
+            Assert.Equal(newName, result.Name);
+
+            using (var _serviceProviderscope = _serviceProvider.CreateScope())
+            {
+                var provider = _serviceProviderscope.ServiceProvider;
+                var contextTest = provider.GetRequiredService<DbPgContext>();
+                var actual = contextTest.Users.FirstOrDefault(s=>s.Id == user.Id);
+                Assert.NotNull(actual);
+                Assert.Equal(newName, actual.Name);
+            }
+        }
+
+        /// <summary>
         /// Тест удаления сущности
         /// </summary>
         /// <returns></returns>

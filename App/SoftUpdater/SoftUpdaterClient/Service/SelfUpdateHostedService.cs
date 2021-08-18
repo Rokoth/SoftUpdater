@@ -57,6 +57,7 @@ namespace SoftUpdaterClient.Service
                         if (VersionCompare(downloadedVersion?.ParamValue, installedVersion?.ParamValue))
                         {
                             var installService = _serviceProvider.GetRequiredService<IInstallSelfService>();
+                            var backUpService = _serviceProvider.GetRequiredService<ISelfBackupService>();
                             if (installService.Install(new InstallSettings()
                             {
                                 AppDir = _options.ApplicationSelfDirectory,

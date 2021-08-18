@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace SoftUpdater.Controllers
 {
+    /// <summary>
+    /// API Controller for get releases
+    /// </summary>
     [Route("api/v1/release")]
     [ApiController]
     public class ReleaseApiController : CommonControllerBase
@@ -21,30 +27,33 @@ namespace SoftUpdater.Controllers
         private IServiceProvider _serviceProvider;
         private readonly IErrorNotifyService _errorNotifyService;
 
+        /// <summary>
+        /// ctor
+        /// </summary>
+        /// <param name="serviceProvider"></param>
         public ReleaseApiController(IServiceProvider serviceProvider): base(serviceProvider)
         {
             _serviceProvider = serviceProvider;
             _errorNotifyService = serviceProvider.GetRequiredService<IErrorNotifyService>();
         }
 
+        /// <summary>
+        /// Get Releases method
+        /// </summary>
+        /// <param name="version">last downloaded version</param>
+        /// <returns>List<Release></returns>
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetReleases([FromQuery]string version)
         {
             try
             {
-                var clientId = Guid.Parse(User.Identity.Name);
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Release, ReleaseFilter>>();
+
+                var clientId = Guid.Parse(User.Identity.Name);                
                 CancellationTokenSource source = new CancellationTokenSource(30000);
-                var allSelected = false;
-                List<Release> result = new List<Release>();
-                int page = 0;
-                while (!allSelected)
-                {
-                    var selected = await _dataService.GetAsync(new ReleaseFilter(new List<Guid> { clientId }, 100, page++, null, null), source.Token);
-                    result.AddRange(selected.Data);
-                    allSelected = selected.PageCount == page;
-                }
+
+                var result = (await _dataService.GetAsync(new ReleaseFilter(new List<Guid> { clientId }), source.Token)).Data;
                 if (!string.IsNullOrEmpty(version) && result.Any(s => s.Version == version))
                 {
                     var last = result.FirstOrDefault(s => s.Version == version);

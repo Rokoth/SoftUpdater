@@ -2,8 +2,8 @@
 {
     public interface IFilter<T> where T : Entity
     {
-        int Page { get; }
-        int Size { get; }
+        int? Page { get; }
+        int? Size { get; }
         string Sort { get; }
     }
 }

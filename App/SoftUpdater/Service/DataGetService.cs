@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using SoftUpdater.Common;
 using System;
 using System.Collections.Generic;

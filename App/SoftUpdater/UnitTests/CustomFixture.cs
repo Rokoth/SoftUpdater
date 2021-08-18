@@ -48,6 +48,7 @@ namespace TaskCollector.UnitTests
             serviceCollection.AddLogging(configure => configure.AddSerilog());
             serviceCollection.AddDataServices();
             serviceCollection.AddScoped<IDeployService, DeployService>();
+            serviceCollection.AddScoped<IErrorNotifyService, ErrorNotifyService>();
 
             serviceCollection.AddDbContext<DbPgContext>(opt => opt.UseNpgsql(ConnectionString));
             serviceCollection.AddScoped<IRepository<User>, Repository<User>>();

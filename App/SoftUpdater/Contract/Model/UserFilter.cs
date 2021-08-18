@@ -25,7 +25,7 @@ namespace SoftUpdater.Contract.Model
 
     public class ReleaseFilter : Filter<Release>
     {
-        public ReleaseFilter(List<Guid> clients, int size, int page, string sort, string name) : base(size, page, sort)
+        public ReleaseFilter(List<Guid> clients = null, int? size = null, int? page = null, string sort = null, string name = null) : base(size, page, sort)
         {
             Name = name;
             Clients = clients;           
