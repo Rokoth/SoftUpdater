@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using SoftUpdater.ClientHttpClient;
 using SoftUpdater.Common;
+using SoftUpdaterClient.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ namespace SoftUpdater.SoftUpdaterClient
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CommonOptions>(Configuration);
+            services.Configure<ClientOptions>(Configuration);
             services.AddScoped<IClientHttpClient, ClientHttpClient.ClientHttpClient>();
             services.AddLogging();
             services.AddCors();                        
@@ -42,7 +44,17 @@ namespace SoftUpdater.SoftUpdaterClient
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }   
+            }
+            var options = app.ApplicationServices.GetRequiredService<IOptions<ClientOptions>>().Value;
+            if (options.Mode == RunMode.SelfUpdate)
+            {
+                var service = app.ApplicationServices.GetRequiredService<ISelfUpdateService>();
+                service.Execute().GetAwaiter().GetResult();
+                var _lifeTime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+                _lifeTime.StopApplication();
+            }
         }
+
+        
     }
 }

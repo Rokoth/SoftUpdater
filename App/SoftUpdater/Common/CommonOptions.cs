@@ -43,7 +43,19 @@ namespace SoftUpdater.Common
 
         public string ApplicationSelfDirectory { get; set; }
         public string BackupSelfDirectory { get; set; }
-        
+
+        public string UpdateScript { get; set; }
+        public string UpdateSelfScript { get; set; }
+        public string ServiceName { get; set; }
+
+        public RunMode Mode { get; set; }
+        public string SelfUpdateTempDir { get; set; }
+    }
+
+    public enum RunMode
+    { 
+        Normal,
+        SelfUpdate
     }
 
     public class ErrorNotifyOptions

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Serilog;
+using SoftUpdater.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -161,8 +162,12 @@ namespace SoftUpdater.SoftUpdaterClient
         public static IConfigurationBuilder AddDbConfiguration(this IConfigurationBuilder builder)
         {
             var configuration = builder.Build();
-            var connectionString = configuration.GetConnectionString("MainConnection");
-            builder.AddConfigDbProvider(options => options.UseSqlite(connectionString), connectionString);
+            var mode = configuration.GetValue<RunMode>("Mode");
+            if (mode == RunMode.Normal)
+            {
+                var connectionString = configuration.GetConnectionString("MainConnection");
+                builder.AddConfigDbProvider(options => options.UseSqlite(connectionString), connectionString);
+            }
             return builder;
         }
 

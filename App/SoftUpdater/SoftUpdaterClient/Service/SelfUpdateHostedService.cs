@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using SoftUpdater.ClientHttpClient;
 using SoftUpdater.Common;
 using System;
@@ -56,45 +57,35 @@ namespace SoftUpdaterClient.Service
                         var installedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _installedVersionField);
                         if (VersionCompare(downloadedVersion?.ParamValue, installedVersion?.ParamValue))
                         {
-                            var installService = _serviceProvider.GetRequiredService<IInstallSelfService>();
-                            var backUpService = _serviceProvider.GetRequiredService<ISelfBackupService>();
-                            if (installService.Install(new InstallSettings()
+                            var _serviceHelper = _serviceProvider.GetRequiredService<IServiceHelper>();
+                            _serviceHelper.DirectoryCopy(
+                                Directory.GetCurrentDirectory(),
+                                _options.SelfUpdateTempDir, 
+                                new List<string>(), 
+                                new List<string>(), 
+                                true);
+
+                            string appsettings = "";
+
+                            using (var file = new StreamReader(Path.Combine(_options.SelfUpdateTempDir, "appsettings.json")))
                             {
-                                AppDir = _options.ApplicationSelfDirectory,
-                                BackupDir = _options.BackupSelfDirectory,
-                                DoBackup = true,
-                                IgnoreDirectories = new List<string>() {
-                                    _options.BackupSelfDirectory, 
-                                    _options.ReleasePathSelf, 
-                                    Directory.GetCurrentDirectory()
-                                },
-                                IgnoreFiles = new List<string>(),
-                                InstallType = InstallType.Replace,
-                                TmpDir = _options.ReleasePath
-                            }))
-                            {
-                                if (installedVersion != null)
-                                {
-                                    installedVersion.ParamValue = downloadedVersion.ParamValue;
-                                    _context.Settings.Update(installedVersion);
-                                }
-                                else
-                                {
-                                    var maxId = _context.Settings.Select(s => s.Id).Max();
-                                    installedVersion = new DbClient.Model.Settings()
-                                    {
-                                        Id = maxId + 1,
-                                        ParamName = _installedVersionField,
-                                        ParamValue = downloadedVersion.ParamValue
-                                    };
-                                    _context.Settings.Add(installedVersion);
-                                }
-                                await _context.SaveChangesAsync();
+                                appsettings = file.ReadToEnd();
                             }
-                            else
+                            JObject obj = JObject.Parse(appsettings);
+                            AddOrReplaceToken(ref obj, "ApplicationSelfDirectory", Directory.GetCurrentDirectory());
+                            AddOrReplaceToken(ref obj, "Mode", "SelfUpdate");
+
+                            if (!Path.IsPathRooted(_options.BackupSelfDirectory))
+                                AddOrReplaceToken(ref obj, "BackupSelfDirectory", Path.Combine(Directory.GetCurrentDirectory(), _options.BackupSelfDirectory));
+
+                            if (!Path.IsPathRooted(_options.ReleasePathSelf))
+                                AddOrReplaceToken(ref obj, "ReleasePathSelf", Path.Combine(Directory.GetCurrentDirectory(), _options.ReleasePathSelf));
+
+                            using (var file = new StreamWriter(Path.Combine(_options.SelfUpdateTempDir, "appsettings.json")))
                             {
-                                _logger.LogError("Не удалось обновить сервис");
+                                file.Write(obj.ToString());
                             }
+                            await _serviceHelper.Execute($"{Path.Combine(_options.SelfUpdateTempDir, "SoftUpdater.exe")}");
                         }
                     }
                     catch (Exception ex)
@@ -107,6 +98,18 @@ namespace SoftUpdaterClient.Service
                         GetNextRunDateTime();
                     }
                 }
+            }
+        }
+
+        private void AddOrReplaceToken(ref JObject obj, string key, string value)
+        {
+            if (obj.ContainsKey(key))
+            {                
+                obj[key] = value;
+            }
+            else
+            {
+                obj.Add(key, value);
             }
         }
 

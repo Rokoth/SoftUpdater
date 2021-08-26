@@ -52,23 +52,66 @@ namespace SoftUpdaterClient.Service
                 {
                     try
                     {
+                        
                         var downloadedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _downloadedVersionField);
                         var installedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _installedVersionField);                        
                         if (VersionCompare(downloadedVersion?.ParamValue, installedVersion?.ParamValue))
                         {
                             var installService = _serviceProvider.GetRequiredService<IInstallService>();
-                            if (installService.Install(new InstallSettings()
+                            var backUpService = _serviceProvider.GetRequiredService<IBackupService>();
+                            var rollBackService = _serviceProvider.GetRequiredService<IRollBackService>();
+                            var scriptParser = _serviceProvider.GetRequiredService<IUpdateScriptParser>();
+                            var _serviceHelper = _serviceProvider.GetRequiredService<IServiceHelper>();
+                            bool success = true;
+                            var script = _options.UpdateScript;
+                            var commands = scriptParser.Parse(script.Split("\r\n"));
+
+                            foreach (var command in commands)
                             {
-                                AppDir = _options.ApplicationDirectory,
-                                BackupDir = _options.BackupDirectory,
-                                DoBackup = true,
-                                IgnoreDirectories = new List<string>() {
-                                   _options.BackupDirectory, _options.ReleasePath, Directory.GetCurrentDirectory()
-                                },
-                                IgnoreFiles = new List<string>(),
-                                InstallType = InstallType.Replace,
-                                TmpDir = _options.ReleasePath
-                            }))
+                                if (command.Condition.GetResult(commands))
+                                {
+                                    switch (command.CommandType)
+                                    {
+                                        case CommandEnum.Backup:
+                                            if(!await backUpService.Backup(_options.ApplicationDirectory, _options.BackupDirectory, 
+                                                new[] { _options.ConnectionString }, new List<string>() {
+                                                   _options.BackupDirectory, _options.ReleasePath, Directory.GetCurrentDirectory()
+                                                }, new List<string>())) success = false;
+                                            break;
+                                        case CommandEnum.CMD:
+                                            if(!_serviceHelper.ExecuteCommand(command.Name + string.Join(" ", command.Arguments))) success = false;
+                                            break;
+                                        case CommandEnum.Install:
+                                            if(!installService.Install(new InstallSettings()
+                                            {
+                                                AppDir = _options.ApplicationDirectory,
+                                                BackupDir = _options.BackupDirectory,
+                                                DoBackup = true,
+                                                IgnoreDirectories = new List<string>() {
+                                                       _options.BackupDirectory, _options.ReleasePath, Directory.GetCurrentDirectory()
+                                                    },
+                                                IgnoreFiles = new List<string>(),
+                                                InstallType = InstallType.Replace,
+                                                TmpDir = _options.ReleasePath
+                                            })) success = false;
+                                            break;
+                                        case CommandEnum.Rollback:
+                                            await rollBackService.RollBack(_options.ApplicationDirectory, _options.BackupDirectory,
+                                                new[] { _options.ConnectionString }, new List<string>() {
+                                                   _options.BackupDirectory, _options.ReleasePath, Directory.GetCurrentDirectory()
+                                                }, new List<string>());
+                                            break;
+                                        case CommandEnum.Start:
+                                            if (!_serviceHelper.ExecuteCommand($"service {_options.ServiceName} start")) success = false;
+                                            break;
+                                        case CommandEnum.Stop:
+                                            if (!_serviceHelper.ExecuteCommand($"service {_options.ServiceName} stop")) success = false;
+                                            break;
+                                    }
+                                }
+                            }
+
+                            if (success)
                             {
                                 if (installedVersion != null)
                                 {

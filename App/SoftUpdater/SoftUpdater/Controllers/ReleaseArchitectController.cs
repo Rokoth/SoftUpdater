@@ -47,5 +47,22 @@ namespace SoftUpdater.Controllers
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
         }
+                
+        [Authorize]
+        public async Task<ActionResult> Details([FromRoute] Guid id)
+        {
+            try
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var result = await _dataService.GetAsync(id, cancellationTokenSource.Token);
+                return View(result);
+            }
+            catch (Exception ex)
+            {
+                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Details: {ex.Message} {ex.StackTrace}");
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
     }
 }
