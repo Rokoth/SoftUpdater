@@ -9,5 +9,6 @@ namespace SoftUpdater.Contract.Model
         public string Version { get; set; }
         public int Number { get; set; }
         public Guid ClientId { get; set; }
+        public string Client { get; set; }
     }
 }

@@ -4,6 +4,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>@Html.DisplayNameFor(s => s.Client)</th>
             <th>@Html.DisplayNameFor(s => s.Number)</th>
             <th>@Html.DisplayNameFor(s => s.Path)</th>
             <th>@Html.DisplayNameFor(s => s.Version)</th>
@@ -14,10 +15,12 @@
         @foreach (var item in Model)
         {
         <tr>
+            <td>@item.Client</td>
             <td>@item.Number</td>
             <td>@item.Path</td>
-            <td>@item.Version</td>            
+            <td>@item.Version</td>
             <td>
+                @Html.ActionLink("Архитектуры", "Index", "ReleaseArchitect", new { releaseId = item.Id }, new { @class = "btn btn-dark" })
                 @Html.ActionLink("Редактировать", "Edit", new { id = item.Id }, new { @class = "btn btn-dark" })
                 @Html.ActionLink("Удалить", "Delete", new { id = item.Id }, new { @class = "btn btn-dark" })
             </td>

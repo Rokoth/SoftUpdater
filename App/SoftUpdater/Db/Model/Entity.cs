@@ -112,6 +112,8 @@ namespace SoftUpdater.Db.Model
         public string Name { get; set; }
         [ColumnName("path")]
         public string Path { get; set; }
+        [ColumnName("file_name")]
+        public string FileName { get; set; }
     }
 
     [TableName("h_release_architect")]

@@ -8,7 +8,7 @@ namespace SoftUpdater.Contract.Model
     {
         public Guid ReleaseId { get; set; }
         [Display(Name = "Релиз")]
-        public Release Release { get; set; }
+        public string Release { get; set; }
         [Display(Name = "Имя")]
         [Required(ErrorMessage = "Поле должно быть установлено")]
         [Remote("CheckName", "ReleaseArchitect", ErrorMessage = "Имя уже используется")]

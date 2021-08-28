@@ -1,13 +1,10 @@
-﻿@model IEnumerable<SoftUpdater.Contract.Model.ReleaseArchitect>
+﻿@model IEnumerable<SoftUpdater.Contract.Model.ReleaseArchitectHistory>
 
 @{
-    ViewData["Title"] = "Архитектуры обновления";
+    ViewData["Title"] = "История изменений архитектур";
 }
 
-<div class="container">
-    @Html.ActionLink("Добавить", "Create", new { releaseId = ViewData["ReleaseId"] }, new { @class = "btn btn-dark" })
-    @Html.ActionLink("История", "History", new { }, new { @class = "btn btn-dark" })
-    @Html.ActionLink("Вернуться", "Index", "Release", null, new { @class = "btn btn-dark" })
+<div class="container">    
     <hr>
     Фильтры:
     <div id="filter">
@@ -34,7 +31,7 @@
 
         function refresh() {
             $('#page').html(page);
-            $.get("ReleaseArchitect/ListPaged/?releaseId=@ViewData["ReleaseId"]&page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
+            $.get("HistoryListPaged/?page=" + (page - 1) + "&size=" + $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
                 $('#content').html(data);
                 allPages = request.getResponseHeader('x-pages');
                 $('#all_pages').html(allPages);

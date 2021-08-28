@@ -1,0 +1,37 @@
+﻿@model SoftUpdater.Contract.Model.ReleaseArchitect
+
+<h3>Вы действительно хотите удалить архитектуру?</h3>
+<div>   
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>               
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Path)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Path)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Release)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Release)
+        </dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="submit" value="Удалить" class="btn btn-dark" />
+        @Html.ActionLink("Вернуться", "Details", new { id = Model.Id }, new { @class = "btn btn-dark" })
+    </form>
+</div>

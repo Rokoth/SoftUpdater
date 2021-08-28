@@ -4,9 +4,10 @@
     ViewData["Title"] = "Обновления";    
 }
 
-<div class="container">    
+<div class="container">
     @Html.ActionLink("Добавить", "Create", new { clientId = ViewData["ClientId"] }, new { @class = "btn btn-dark" })
     @Html.ActionLink("История", "History", new { }, new { @class = "btn btn-dark" })
+    @Html.ActionLink("Вернуться", "Index", "Client", null, new { @class = "btn btn-dark" })
     <hr>
     Фильтры:
     <div id="filter">
@@ -33,7 +34,7 @@
        
         function refresh() {
             $('#page').html(page);
-            $.get("Release/ListPaged/?clientId=@ViewData["ClientId"]&page=" + (page - 1) + "&size=" +
+            $.get("/Release/ListPaged/?clientId=@ViewData["ClientId"]&page=" + (page - 1) + "&size=" +
                     $('#count_items').val() + "&name=" + $('#filter_name').val(), function (data, textStatus, request) {
                 $('#content').html(data);
                 allPages = request.getResponseHeader('x-pages');

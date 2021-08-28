@@ -12,9 +12,13 @@ namespace SoftUpdater.Service
                 Contract.Model.ClientFilter, Contract.Model.ClientCreator, Contract.Model.ClientUpdater>();
             services.AddDataService<ReleaseDataService, Db.Model.Release, Contract.Model.Release,
                 Contract.Model.ReleaseFilter, Contract.Model.ReleaseCreator, Contract.Model.ReleaseUpdater>();
+            services.AddDataService<ReleaseArchitectDataService, Db.Model.ReleaseArchitect, Contract.Model.ReleaseArchitect,
+                Contract.Model.ReleaseArchitectFilter, Contract.Model.ReleaseArchitectCreator, Contract.Model.ReleaseArchitectUpdater>();
 
             services.AddScoped<IGetDataService<Contract.Model.UserHistory, Contract.Model.UserHistoryFilter>, UserHistoryDataService>();
             services.AddScoped<IGetDataService<Contract.Model.ClientHistory, Contract.Model.ClientHistoryFilter>, ClientHistoryDataService>();
+            services.AddScoped<IGetDataService<Contract.Model.ReleaseHistory, Contract.Model.ReleaseHistoryFilter>, ReleaseHistoryDataService>();
+            services.AddScoped<IGetDataService<Contract.Model.ReleaseArchitectHistory, Contract.Model.ReleaseArchitectHistoryFilter>, ReleaseArchitectHistoryDataService>();
             services.AddScoped<IAuthService, AuthService>();
 
             return services;

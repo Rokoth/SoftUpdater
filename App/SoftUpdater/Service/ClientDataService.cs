@@ -23,9 +23,9 @@ namespace SoftUpdater.Service
             return s => (filter.Name == null || s.Name.Contains(filter.Name)) && (filter.UserId == null || s.UserId == filter.UserId);
         }
 
-        protected override async Task<Db.Model.Client> MapToEntityAdd(Contract.Model.ClientCreator creator)
+        protected override async Task<Db.Model.Client> MapToEntityAdd(Contract.Model.ClientCreator creator, CancellationToken token)
         {
-            var entity = await base.MapToEntityAdd(creator);
+            var entity = await base.MapToEntityAdd(creator, token);
             entity.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(creator.Password));
 
             if (!Directory.Exists(creator.BasePath))

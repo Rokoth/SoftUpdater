@@ -77,7 +77,9 @@ namespace SoftUpdater.Controllers
                     Id = result.Id,
                     Number = result.Number,
                     Path = result.Path,
-                    Version = result.Version
+                    Version = result.Version,
+                    Client = result.Client,
+                    ClientId = result.ClientId
                 };
                 return View(updater);
             }

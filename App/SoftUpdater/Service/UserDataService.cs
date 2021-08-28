@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUpdater.Service
@@ -19,9 +20,9 @@ namespace SoftUpdater.Service
             return s => filter.Name == null || s.Name.Contains(filter.Name);
         }
 
-        protected override async Task<Db.Model.User> MapToEntityAdd(Contract.Model.UserCreator creator)
+        protected override async Task<Db.Model.User> MapToEntityAdd(Contract.Model.UserCreator creator, CancellationToken token)
         {
-            var entity = await base.MapToEntityAdd(creator);
+            var entity = await base.MapToEntityAdd(creator, token);
             entity.Password = SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(creator.Password));
             return entity;
         }

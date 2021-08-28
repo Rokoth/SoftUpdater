@@ -15,6 +15,7 @@ namespace SoftUpdater.Common
         /// </summary>
         public string ConnectionString { get; set; }
         public ErrorNotifyOptions ErrorNotifyOptions { get; set; }
+        public string UploadBasePath { get; set; }
     }
 
     public class ClientOptions: CommonOptions

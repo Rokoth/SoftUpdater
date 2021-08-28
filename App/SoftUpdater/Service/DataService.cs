@@ -18,7 +18,7 @@ namespace SoftUpdater.Service
             
         }
 
-        protected virtual async Task<TEntity> MapToEntityAdd(TCreator creator)
+        protected virtual async Task<TEntity> MapToEntityAdd(TCreator creator, CancellationToken token)
         {
             var result = _mapper.Map<TEntity>(creator);
             result.Id = Guid.NewGuid();
@@ -38,7 +38,7 @@ namespace SoftUpdater.Service
         {
             return await ExecuteAsync(async (repo) =>
             {
-                var entity = await MapToEntityAdd(creator);
+                var entity = await MapToEntityAdd(creator, token);
                 var result = await repo.AddAsync(entity, true, token);
                 var prepare = _mapper.Map<Tdto>(result);
                 prepare = await Enrich(prepare, token);

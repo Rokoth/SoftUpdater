@@ -36,4 +36,14 @@ namespace SoftUpdater.Contract.Model
         public string Version { get; }
         public Guid? Id { get; }
     }
+
+    public class ReleaseArchitectHistoryFilter : Filter<ReleaseArchitectHistory>
+    {
+        public ReleaseArchitectHistoryFilter(int size, int page, string sort, Guid? id) : base(size, page, sort)
+        {            
+            Id = id;            
+        }
+       
+        public Guid? Id { get; }
+    }
 }

@@ -83,7 +83,8 @@ create table if not exists release_architect(
 	  id            uuid          not null primary key
 	, release_id    uuid          not null
 	, "name"        varchar       not null
-	, "path"        varchar       null	
+	, "path"        varchar       not null	
+	, "file_name"   varchar       not null	
 	, version_date  timestamptz   not null
 	, is_deleted    boolean       not null default false	
 );
@@ -94,6 +95,7 @@ create table if not exists h_release_architect(
 	, release_id    uuid          null
 	, "name"        varchar       null
 	, "path"        varchar       null	
+	, "file_name"   varchar       null
 	, version_date  timestamptz   null
 	, is_deleted    boolean       null
 	, change_date   timestamptz   not null default now()
