@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace TaskCollector.UnitTests
+namespace SoftUpdater.UnitTests
 {
 
     /// <summary>

@@ -26,8 +26,7 @@ namespace SoftUpdaterClient.Service
         public async Task<bool> Backup(string appDir, string backupDir, string[] connectionStrings, List<string> ignoreDirectories, List<string> ignoreFiles)
         {
             try
-            {
-                var s = "Server=localhost;Database=soft_updater;Username=postgres;Password=Rok_Oth_123";
+            {                
                 var dumped = true;
                 foreach (var connectionString in connectionStrings)
                 {

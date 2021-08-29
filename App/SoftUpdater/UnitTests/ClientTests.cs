@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace TaskCollector.UnitTests
+namespace SoftUpdater.UnitTests
 {
     public class ClientTests : IClassFixture<ClientCustomFixture>
     {
@@ -54,12 +54,31 @@ namespace TaskCollector.UnitTests
                         streamWriter.WriteLine("test");
                     }
                 }
-                CreateDabase(rootConnectionString, dbName);
+                CreateDabase(rootConnectionString, connectionString, dbName);
 
                 var result = await backUpService.Backup(appDir, backUpDir, new string[] { connectionString }, ignoreDirectories, ignoreFiles);
                 Assert.True(result);
                 var backUpDbFileExists = Directory.GetFiles(backUpDir, $"backup_*.backup").Any();
                 Assert.True(backUpDbFileExists);
+
+                var directories = Directory.GetDirectories(backUpDir);
+                foreach (var dir in directories)
+                {
+                    var dirName = dir.Split(Path.DirectorySeparatorChar).Last();
+                    Assert.Contains(dirName, toCreateDirectories);
+                    Assert.DoesNotContain(dirName, ignoreDirectories);
+                }
+
+                var files = Directory.GetFiles(backUpDir);
+                foreach (var file in files)
+                {
+                    var fileName = file.Split(Path.DirectorySeparatorChar).Last();
+                    if (!fileName.EndsWith("backup"))
+                    {
+                        Assert.Contains(fileName, toCreateFiles);
+                        Assert.DoesNotContain(fileName, ignoreFiles);
+                    }
+                }
             }
             catch (Exception)
             {
@@ -73,20 +92,26 @@ namespace TaskCollector.UnitTests
             }
         }
 
-        private void CreateDabase(string rootConnectionString, string dbName)
+        private void CreateDabase(string rootConnectionString, string connectionString, string dbName)
         {
             try
-            {                                
-                using NpgsqlConnection _connPg = new NpgsqlConnection(rootConnectionString);
-                _connPg.Open();
-                string script1 = $"select exists(SELECT 1 FROM pg_database WHERE datname = '{dbName}');";
-                var cmd1 = new NpgsqlCommand(script1, _connPg);
-                if (!(bool)cmd1.ExecuteScalar())
+            {
+                using (NpgsqlConnection _connPg = new NpgsqlConnection(rootConnectionString))
                 {
-                    string script2 = $"create database {dbName};use {dbName};";
-                    var cmd2 = new NpgsqlCommand(script2, _connPg);
-                    cmd2.ExecuteNonQuery();
+                    _connPg.Open();
+                    string script1 = $"select exists(SELECT 1 FROM pg_database WHERE datname = '{dbName}');";
+                    var cmd1 = new NpgsqlCommand(script1, _connPg);
+                    if (!(bool)cmd1.ExecuteScalar())
+                    {
+                        string script2 = $"create database {dbName};";
+                        var cmd2 = new NpgsqlCommand(script2, _connPg);
+                        cmd2.ExecuteNonQuery();                        
+                    }
+                }
 
+                using (NpgsqlConnection _connPg = new NpgsqlConnection(connectionString))
+                {
+                    _connPg.Open();
                     string script3 = $"create table test(id serial, mess varchar);";
                     var cmd3 = new NpgsqlCommand(script3, _connPg);
                     cmd3.ExecuteNonQuery();

@@ -49,8 +49,11 @@ namespace SoftUpdaterClient.Service
                 FileInfo[] files = dir.GetFiles();
                 foreach (FileInfo file in files)
                 {
-                    string tempPath = Path.Combine(destDirName, file.Name);
-                    file.CopyTo(tempPath, false);
+                    if (!ignoreFiles.Contains(file.Name))
+                    {
+                        string tempPath = Path.Combine(destDirName, file.Name);
+                        file.CopyTo(tempPath, false);
+                    }
                 }
 
                 // If copying subdirectories, copy them and their contents to new location.
@@ -58,8 +61,11 @@ namespace SoftUpdaterClient.Service
                 {
                     foreach (DirectoryInfo subdir in dirs)
                     {
-                        string tempPath = Path.Combine(destDirName, subdir.Name);
-                        DirectoryCopy(subdir.FullName, tempPath, ignoreDirectories, ignoreFiles, copySubDirs);
+                        if (!ignoreDirectories.Contains(subdir.Name))
+                        {
+                            string tempPath = Path.Combine(destDirName, subdir.Name);
+                            DirectoryCopy(subdir.FullName, tempPath, ignoreDirectories, ignoreFiles, copySubDirs);
+                        }
                     }
                 }
                 return true;
@@ -139,7 +145,7 @@ namespace SoftUpdaterClient.Service
 
                     proc.WaitForExit();
                     var exit = proc.ExitCode;
-                    proc.Close();
+                    proc.Close();                    
                     return true;
                 }
                 catch (Exception ex)
@@ -150,7 +156,13 @@ namespace SoftUpdaterClient.Service
                 }
                 finally
                 {
-                    if (File.Exists(batFilePath)) File.Delete(batFilePath);
+                    try
+                    {
+                        if (File.Exists(batFilePath)) File.Delete(batFilePath);
+                    }
+                    catch 
+                    {                        
+                    }
                 }
             });
         }

@@ -17,7 +17,7 @@ using SoftUpdater.Db.Repository;
 using SoftUpdater.Db.Model;
 using SoftUpdater.SoftUpdaterHost;
 
-namespace TaskCollector.UnitTests
+namespace SoftUpdater.UnitTests
 {
 
     public class CustomFixture : IDisposable
