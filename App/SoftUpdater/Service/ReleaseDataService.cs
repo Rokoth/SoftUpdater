@@ -91,7 +91,8 @@ namespace SoftUpdater.Service
 
         protected override Expression<Func<Db.Model.ReleaseArchitect, bool>> GetFilter(Contract.Model.ReleaseArchitectFilter filter)
         {
-            return s => s.ReleaseId == filter.ReleaseId && (string.IsNullOrEmpty(filter.Name) || s.Name == filter.Name);
+            return s => s.ReleaseId == filter.ReleaseId && (string.IsNullOrEmpty(filter.Name) || s.Name == filter.Name)
+            && (string.IsNullOrEmpty(filter.Path) || s.Path == filter.Path);
         }
 
         protected override async Task<Db.Model.ReleaseArchitect> MapToEntityAdd(Contract.Model.ReleaseArchitectCreator creator, CancellationToken token)
@@ -103,12 +104,49 @@ namespace SoftUpdater.Service
             var release = await _releaseRepo.GetAsync(creator.ReleaseId, token);
             var _clientRepo = _serviceProvider.GetRequiredService<IRepository<Db.Model.Client>>();
             var client = await _clientRepo.GetAsync(release.ClientId, token);
-            string path = Path.Combine(options.Value.UploadBasePath, client.BasePath, release.Path, creator.Path, creator.File.FileName);
-            
-            using (var fileStream = new FileStream(path, FileMode.Create))
+            string path = Path.Combine(options.Value.UploadBasePath, client.BasePath, release.Path, creator.Path);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            string filePath = Path.Combine(path, creator.File.FileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
                 await creator.File.CopyToAsync(fileStream);
             }
+            return result;
+        }
+
+        /// <summary>
+        /// function for enrichment data item
+        /// </summary>
+        protected override async Task<Contract.Model.ReleaseArchitect> Enrich(Contract.Model.ReleaseArchitect entity, CancellationToken token)
+        {
+            var releaseRepo = _serviceProvider.GetRequiredService<IRepository<Db.Model.Release>>();
+            var release = await releaseRepo.GetAsync(entity.ReleaseId, token);
+            entity.Release = release.Version;
+            return entity;
+        }
+
+        /// <summary>
+        /// function for enrichment data item
+        /// </summary>
+        protected override async Task<IEnumerable<Contract.Model.ReleaseArchitect>> Enrich(IEnumerable<Contract.Model.ReleaseArchitect> entities, CancellationToken token)
+        {
+            var releaseRepo = _serviceProvider.GetRequiredService<IRepository<Db.Model.Release>>();
+            var releaseIds = entities.Select(s => s.ReleaseId).Distinct().ToList();
+            var releases = await releaseRepo.GetAsync(new Db.Model.Filter<Db.Model.Release>()
+            {
+                Selector = s => releaseIds.Contains(s.Id)
+            }, token);
+            List<Contract.Model.ReleaseArchitect> result = new List<Contract.Model.ReleaseArchitect>();
+            foreach (var entity in entities)
+            {
+                var release = releases.Data.FirstOrDefault(s => s.Id == entity.ReleaseId);
+                entity.Release = release.Version;
+                result.Add(entity);
+            }
+
             return result;
         }
 

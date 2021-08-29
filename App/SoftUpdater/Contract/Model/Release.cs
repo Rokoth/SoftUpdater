@@ -14,11 +14,7 @@ namespace SoftUpdater.Contract.Model
         public string Client { get; set; }
         [Display(Name = "ID клиента")]
         public Guid ClientId { get; set; }
-    }
-
-    public class LoadHistoryCreator
-    {
-    }
+    }        
 
     public class LoadHistoryUpdater : IEntity
     {

@@ -36,12 +36,14 @@ namespace SoftUpdater.Contract.Model
 
     public class ReleaseArchitectFilter : Filter<ReleaseArchitect>
     {
-        public ReleaseArchitectFilter(Guid releaseId, int size, int page, string sort, string name) : base(size, page, sort)
+        public ReleaseArchitectFilter(Guid releaseId, int? size, int? page, string sort, string name, string path) : base(size, page, sort)
         {
             Name = name;
+            Path = path;
             ReleaseId = releaseId;
         }
         public string Name { get; }
+        public string Path { get; }
         public Guid ReleaseId { get; }
     }
 

@@ -12,11 +12,11 @@ namespace SoftUpdater.Contract.Model
         public string Release { get; set; }
         [Display(Name = "Имя")]
         [Required(ErrorMessage = "Поле должно быть установлено")]
-        [Remote("CheckName", "ReleaseArchitect", ErrorMessage = "Имя уже используется")]
+        [Remote("CheckName", "ReleaseArchitect", ErrorMessage = "Имя уже используется", AdditionalFields ="ReleaseId")]
         public string Name { get; set; }
         [Display(Name = "Путь")]
         [Required(ErrorMessage = "Поле должно быть установлено")]
-        [Remote("CheckPath", "ReleaseArchitect", ErrorMessage = "Путь уже используется")]
+        [Remote("CheckPath", "ReleaseArchitect", ErrorMessage = "Путь уже используется", AdditionalFields = "ReleaseId")]
         public string Path { get; set; }
 
         [Display(Name = "Файл")]

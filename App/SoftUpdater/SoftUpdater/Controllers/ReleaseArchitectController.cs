@@ -36,13 +36,13 @@ namespace SoftUpdater.Controllers
         }
 
         [Authorize]
-        public async Task<ActionResult> ListPaged(Guid releaseId, int page = 0, int size = 10, string sort = null, string name = null)
+        public async Task<ActionResult> ListPaged(Guid releaseId, int page = 0, int size = 10, string sort = null, string name = null, string path = null)
         {
             try
             {
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
-                var result = await _dataService.GetAsync(new ReleaseArchitectFilter(releaseId, size, page, sort, name), source.Token);
+                var result = await _dataService.GetAsync(new ReleaseArchitectFilter(releaseId, size, page, sort, name, path), source.Token);
                 Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
@@ -152,6 +152,34 @@ namespace SoftUpdater.Controllers
                 await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Create: {ex.Message} {ex.StackTrace}");
                 return RedirectToAction("Index", "Error", new { Message = ex.Message });
             }
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> CheckName(string name, Guid releaseId)
+        {
+            bool result = false;
+            if (!string.IsNullOrEmpty(name))
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var check = await _dataService.GetAsync(new ReleaseArchitectFilter(releaseId, null, null, null, name, null), cancellationTokenSource.Token);
+                result = !check.Data.Any();
+            }
+            return Json(result);
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> CheckPath(string path, Guid releaseId)
+        {
+            bool result = false;
+            if (!string.IsNullOrEmpty(path))
+            {
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var check = await _dataService.GetAsync(new ReleaseArchitectFilter(releaseId, null, null, null, null, path), cancellationTokenSource.Token);
+                result = !check.Data.Any();
+            }
+            return Json(result);
         }
 
         // GET: UserController/Delete/5

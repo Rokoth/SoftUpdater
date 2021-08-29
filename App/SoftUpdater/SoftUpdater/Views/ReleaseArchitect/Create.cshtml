@@ -40,7 +40,7 @@
                     new { },
                     new { @class = "btn btn-dark", @id = "release_select" })
                 <input type="submit" value="Добавить" class="btn btn-dark" />
-                <a asp-action="Details" class="btn btn-dark">Вернуться</a>
+                @Html.ActionLink("Вернуться", "Index", new { releaseId = Model.ReleaseId }, new { @class = "btn btn-dark" })
             </div>
         </form>
     </div>

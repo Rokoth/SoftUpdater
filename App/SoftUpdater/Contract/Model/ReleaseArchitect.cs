@@ -16,7 +16,8 @@ namespace SoftUpdater.Contract.Model
         [Display(Name = "Путь")]
         [Required(ErrorMessage = "Поле должно быть установлено")]
         [Remote("CheckPath", "ReleaseArchitect", ErrorMessage = "Путь уже используется")]
-        public string Path { get; set; }        
+        public string Path { get; set; }
+        public string FileName { get; set; }
     }
 
     public class ReleaseArchitectHistory : EntityHistory

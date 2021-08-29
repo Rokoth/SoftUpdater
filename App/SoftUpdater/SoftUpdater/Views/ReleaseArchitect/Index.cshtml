@@ -7,7 +7,7 @@
 <div class="container">
     @Html.ActionLink("Добавить", "Create", new { releaseId = ViewData["ReleaseId"] }, new { @class = "btn btn-dark" })
     @Html.ActionLink("История", "History", new { }, new { @class = "btn btn-dark" })
-    @Html.ActionLink("Вернуться", "Index", "Release", null, new { @class = "btn btn-dark" })
+    @Html.ActionLink("Вернуться", "Index", "Release", new { }, new { @class = "btn btn-dark" })
     <hr>
     Фильтры:
     <div id="filter">
