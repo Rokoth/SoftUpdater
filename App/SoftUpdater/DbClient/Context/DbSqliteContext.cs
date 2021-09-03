@@ -11,7 +11,9 @@ namespace DbClient.Context
     {       
         public DbSet<Settings> Settings { get; set; }
 
-        public DbSqLiteContext(DbContextOptions<DbSqLiteContext> options) : base(options) { }
+        public DbSqLiteContext(DbContextOptions<DbSqLiteContext> options) : base(options) {
+            
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {            

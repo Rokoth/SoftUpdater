@@ -7,7 +7,7 @@
     <RepositoryType>git</RepositoryType>
     <Description>DB Wrapper for client app</Description>
     <Copyright>2021 Dmitriy Rokoth</Copyright>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>

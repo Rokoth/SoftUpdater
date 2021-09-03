@@ -20,12 +20,10 @@ namespace SoftUpdaterClient.Service
         private IServiceProvider _serviceProvider;
         private ILogger<CheckUpdatesHostedServiceBase> _logger;
         private CancellationTokenSource _cancellationTokenSource;
-        private CancellationToken _cancellationToken;
-        private DbSqLiteContext _context;
-        private DateTimeOffset _nextRunDateTime;
+        private CancellationToken _cancellationToken;       
+        private DateTimeOffset? _nextRunDateTime;
         private readonly CronExpression _expression;
-        private UpdateOptions _options;
-        private IClientHttpClient _httpClient;
+        private UpdateOptions _options;       
 
         public CheckUpdatesHostedServiceBase(IServiceProvider serviceProvider, Func<IServiceProvider, UpdateOptions> configureOptions, 
             string nextRunDateTimeField, string downloadedVersionField)
@@ -37,73 +35,125 @@ namespace SoftUpdaterClient.Service
             _logger = _serviceProvider.GetRequiredService<ILogger<CheckUpdatesHostedServiceBase>>();
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
-            _context = _serviceProvider.GetRequiredService<DbSqLiteContext>();
+            
             _options = configureOptions(_serviceProvider);
             if (string.IsNullOrEmpty(_options.CheckUpdateSchedule)) throw new ArgumentNullException("Options::CheckUpdateSchedule");
-            _expression = CronExpression.Parse(_options.CheckUpdateSchedule);
-            _httpClient = _serviceProvider.GetRequiredService<IClientHttpClient>();
-            GetNextRunDateTime();
+            _expression = CronExpression.Parse(_options.CheckUpdateSchedule, CronFormat.IncludeSeconds);                        
         }
 
         private async Task Run()
         {
-            while (!_cancellationToken.IsCancellationRequested)
+            using (var scope = _serviceProvider.CreateScope())
             {
-                if (_nextRunDateTime <= DateTimeOffset.Now)
+                var provider = scope.ServiceProvider;
+                var _context = provider.GetRequiredService<DbSqLiteContext>();
+                var _httpClient = provider.GetRequiredService<IClientHttpClient>();
+                GetNextRunDateTime(_context);
+                while (!_cancellationToken.IsCancellationRequested)
                 {
-                    try
+                    if (_nextRunDateTime <= DateTimeOffset.Now)
                     {
-                        if (await _httpClient.Auth(new ClientIdentity()
+                        try
                         {
-                            Login = _options.Login,
-                            Password = _options.Password
-                        }))
-                        {
-                            var downloadedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _downloadedVersionField);
-                            ReleaseClient release = await _httpClient.GetLastRelease(downloadedVersion.ParamValue);
-                            var architect = release.Architects.First(s=>s.Name == _options.Architecture);
-                            using (Stream stream = await _httpClient.DownloadRelease(architect.Id))
+                            var isAuth = await _httpClient.Auth(new ClientIdentity()
                             {
-                                if (!Directory.Exists(_options.ReleasePath))
+                                Login = _options.Login,
+                                Password = _options.Password
+                            });
+                            if (isAuth)
+                            {
+                                var downloadedVersion = _context.Settings.FirstOrDefault(s => s.ParamName == _downloadedVersionField);
+                                ReleaseClient release = await _httpClient.GetLastRelease(downloadedVersion?.ParamValue);
+                                if (release != null)
                                 {
-                                    Directory.CreateDirectory(_options.ReleasePath);
-                                }
-                                var releasePath = Path.Combine(_options.ReleasePath, release.Architects.First().Name);
-                                if (!Directory.Exists(releasePath))
-                                {
-                                    Directory.CreateDirectory(releasePath);
-                                }
-                                using (FileStream tmp = new FileStream(Path.Combine(releasePath, architect.Name), FileMode.Create))
-                                {
-                                    stream.CopyTo(tmp);
-                                    tmp.Flush();
-                                }
+                                    var architect = release.Architects.FirstOrDefault(s => s.Name == _options.Architecture);
+                                    if (architect != null)
+                                    {
+                                        using (Stream stream = await _httpClient.DownloadRelease(architect.Id))
+                                        {
+                                            if (!Directory.Exists(_options.ReleasePath))
+                                            {
+                                                Directory.CreateDirectory(_options.ReleasePath);
+                                            }
+                                            var releasePath = Path.Combine(_options.ReleasePath, release.Version);
+                                            if (!Directory.Exists(releasePath))
+                                            {
+                                                Directory.CreateDirectory(releasePath);
+                                            }
+                                            using (FileStream tmp = new FileStream(Path.Combine(releasePath, architect.Name), FileMode.Create))
+                                            {
+                                                stream.CopyTo(tmp);
+                                                tmp.Flush();
+                                            }
+                                        }
+                                    }
+                                    SaveSettings(_context, release.Version, _downloadedVersionField);
+                                }                              
                             }
-                            
-                            downloadedVersion.ParamValue = release.Version;
-                            _context.Update(downloadedVersion);
-                            _context.SaveChanges();
+                            else
+                                throw new Exception("Failed to Auth");                            
                         }
-                        _nextRunDateTime = _expression.GetNextOccurrence(_nextRunDateTime, TimeZoneInfo.Local).Value;
+                        catch (Exception ex)
+                        {
+                            await _httpClient.SendErrorMessage($"Ошибка в CheckUpdatesHostedService: {ex.Message} {ex.StackTrace}");
+                            _logger.LogError($"Ошибка в CheckUpdatesHostedService: {ex.Message} {ex.StackTrace}");
+                        }
+                        finally
+                        {
+                            GetNextRunDateTime(_context);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        await _httpClient.SendErrorMessage($"Ошибка в CheckUpdatesHostedService: {ex.Message} {ex.StackTrace}");
-                        _logger.LogError($"Ошибка в CheckUpdatesHostedService: {ex.Message} {ex.StackTrace}");
-                    }
+                    await Task.Delay(TimeSpan.FromMinutes(1));                    
                 }
-                await Task.Delay(TimeSpan.FromMinutes(1));
             }
         }
 
-        private void GetNextRunDateTime()
+        private void GetNextRunDateTime(DbSqLiteContext _context)
         {
             var nextRunDateTimeSettings = _context.Settings.FirstOrDefault(s => s.ParamName == _nextRunDateTimeField);
-            if (nextRunDateTimeSettings != null)
+            if (_nextRunDateTime == null)
             {
-                if (DateTimeOffset.TryParse(nextRunDateTimeSettings.ParamValue, out _nextRunDateTime)) return;
+                if (nextRunDateTimeSettings != null)
+                {
+                    if (DateTimeOffset.TryParse(nextRunDateTimeSettings.ParamValue, out DateTimeOffset nextRunDateTime))
+                    {
+                        _nextRunDateTime = nextRunDateTime;
+                        return;
+                    }
+                }
+                _nextRunDateTime = DateTimeOffset.Now;
             }
-            _nextRunDateTime = _expression.GetNextOccurrence(DateTimeOffset.Now, TimeZoneInfo.Local).Value;
+            _nextRunDateTime = _expression.GetNextOccurrence(_nextRunDateTime.Value, TimeZoneInfo.Local).Value;
+            SaveSettings(_context, _nextRunDateTime.ToString(), _nextRunDateTimeField);
+        }
+
+        private DbClient.Model.Settings SaveSettings(DbSqLiteContext _context, string value, string fieldName)
+        {
+            var currentSettings = _context.Settings.FirstOrDefault(s => s.ParamName == fieldName);
+            if (currentSettings != null)
+            {
+                currentSettings.ParamValue = value;
+                _context.Settings.Update(currentSettings);
+                _context.SaveChanges();
+            }
+            else
+            {
+                var maxId = 1;
+                if (_context.Settings.Any())
+                {
+                    maxId = _context.Settings.Max(s => s.Id) + 1;
+                }
+                currentSettings = new DbClient.Model.Settings()
+                {
+                    Id = maxId,
+                    ParamName = fieldName,
+                    ParamValue = value
+                };
+                _context.Settings.Add(currentSettings);
+                _context.SaveChanges();
+            }
+
+            return currentSettings;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

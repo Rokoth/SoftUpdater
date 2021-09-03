@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SoftUpdaterClient.Service
@@ -68,7 +69,22 @@ namespace SoftUpdaterClient.Service
                                 }, new List<string>())) success = false;
                             break;
                         case CommandEnum.CMD:
-                            if (!_serviceHelper.ExecuteCommand(command.Name + string.Join(" ", command.Arguments))) success = false;
+                            var arguments = new List<string>();
+                            foreach (var arg in command.Arguments)
+                            {
+                                var newArg = arg;
+                                if (newArg.Contains("{{"))
+                                {
+                                    var field = Regex.Match(newArg, "({{.*?}}) /G", RegexOptions.IgnoreCase);
+                                    var prop = typeof(ClientOptions).GetProperties().Where(s => s.Name.Equals(field.Groups[1].Value)).FirstOrDefault();
+                                    if (prop != null)
+                                    {
+                                        newArg.Replace($"{{{prop.Name}}}", prop.GetValue(_options).ToString());
+                                    }
+                                }
+                                arguments.Add(newArg);
+                            }
+                            if (!_serviceHelper.ExecuteCommand(command.Name + string.Join(" ", arguments))) success = false;
                             break;
                         case CommandEnum.Install:
                             if (!_installService.Install(new InstallSettings()
@@ -90,7 +106,7 @@ namespace SoftUpdaterClient.Service
                             await _rollBackService.RollBack(
                                 _options.ApplicationSelfDirectory, 
                                 _options.BackupSelfDirectory,
-                                new[] { _options.ConnectionString }, 
+                                new string[] { },
                                 new List<string>() {
                                     _options.BackupSelfDirectory, 
                                     _options.ReleasePathSelf, 

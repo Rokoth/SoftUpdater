@@ -92,6 +92,37 @@ namespace SoftUpdater.UnitTests
             }
         }
 
+        [Fact]
+        public void UpdateScriptParserTest()
+        {
+            var script = "A1: Stop\r\nA2: (A1) Backup\r\nA3: (A2) CMD \"7z x \\\"{{ReleasePath}}\\\\app.zip\\\" -o\\\"{{ReleasePath}}\\\"\"\r\nA5: (A2 and A3) Install\r\nA6: (not A5) RollBack\r\nA7: (A5 or A6) Start\r\n";
+            var parseService = _serviceProvider.GetRequiredService<IUpdateScriptParser>();
+            var result = parseService.Parse(script.Split("\r\n"));
+            Assert.Equal("A1", result[0].Name);
+            Assert.Equal(CommandEnum.Stop, result[0].CommandType);
+            Assert.Null(result[0].Arguments);            
+
+            Assert.Equal("A2", result[1].Name);
+            Assert.Equal(CommandEnum.Backup, result[1].CommandType);
+            Assert.Null(result[1].Arguments);
+
+            Assert.Equal("A3", result[2].Name);
+            Assert.Equal(CommandEnum.CMD, result[2].CommandType);
+            Assert.NotEmpty(result[2].Arguments);
+
+            Assert.Equal("A5", result[3].Name);
+            Assert.Equal(CommandEnum.Install, result[3].CommandType);
+            Assert.Null(result[3].Arguments);
+
+            Assert.Equal("A6", result[4].Name);
+            Assert.Equal(CommandEnum.Rollback, result[4].CommandType);
+            Assert.Null(result[4].Arguments);
+
+            Assert.Equal("A7", result[5].Name);
+            Assert.Equal(CommandEnum.Start, result[5].CommandType);
+            Assert.Null(result[5].Arguments);
+        }
+
         private void CreateDabase(string rootConnectionString, string connectionString, string dbName)
         {
             try

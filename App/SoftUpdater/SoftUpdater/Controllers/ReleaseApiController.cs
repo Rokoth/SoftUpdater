@@ -103,6 +103,7 @@ namespace SoftUpdater.Controllers
             try
             {
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Release, ReleaseFilter>>();
+                var _historyService = _serviceProvider.GetRequiredService<IAddDataService<LoadHistory, LoadHistoryCreator>>();
                 var archDataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
                 var options = _serviceProvider.GetRequiredService<IOptions<CommonOptions>>();
 
@@ -119,7 +120,15 @@ namespace SoftUpdater.Controllers
                 string path = Path.Combine(options.Value.UploadBasePath, client.BasePath, release.Path, arch.Path, arch.FileName);
                 if (System.IO.File.Exists(path))
                 {
-                    var content = new System.IO.MemoryStream(System.IO.File.ReadAllBytes(path));                   
+                    var content = new System.IO.MemoryStream(System.IO.File.ReadAllBytes(path));
+                    await _historyService.AddAsync(new LoadHistoryCreator()
+                    { 
+                      ArchitectId = arch.Id,
+                      ClientId = client.Id,
+                      ReleaseId = release.Id,
+                      LoadDate = DateTime.Now,
+                      Success = true
+                    }, source.Token);
                     return File(content, "application/octet-stream", arch.FileName);                                     
                 }
                 return NotFound("Файл на сервере не найден");

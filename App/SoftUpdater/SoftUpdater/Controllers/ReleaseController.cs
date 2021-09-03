@@ -43,7 +43,7 @@ namespace SoftUpdater.Controllers
                 var _clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
                 var cancellationTokenSource = new CancellationTokenSource(30000);
                 clients = (await _clientDataService.GetAsync(
-                    new ClientFilter(10000, 0, null, null, Guid.Parse(userId)), cancellationTokenSource.Token)).Data.Select(s => s.Id).ToList();
+                    new ClientFilter(10000, 0, null, null, null, Guid.Parse(userId)), cancellationTokenSource.Token)).Data.Select(s => s.Id).ToList();
                 if (clientId != null)
                 {
                     if (!clients.Any(s => s == clientId.Value)) throw new Exception("Неверный клиент");
@@ -161,7 +161,7 @@ namespace SoftUpdater.Controllers
             var userId = User.Identity.Name;
             var _clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
             var cancellationTokenSource = new CancellationTokenSource(30000);
-            var clients = await _clientDataService.GetAsync(new ClientFilter(10000, 0, null, null, Guid.Parse(userId)), cancellationTokenSource.Token);
+            var clients = await _clientDataService.GetAsync(new ClientFilter(10000, 0, null, null, null, Guid.Parse(userId)), cancellationTokenSource.Token);
             if (clientId!=null && !clients.Data.Any(s=>s.Id == clientId.Value))
             {
                 return RedirectToAction("Index", "Error", new { Message = "Неверный клиент" });

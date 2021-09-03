@@ -9,6 +9,7 @@ using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,14 +52,14 @@ namespace SoftUpdater.Controllers
         /// <param name="name">name filter</param>
         /// <returns></returns>
         [Authorize]
-        public async Task<ActionResult> ListPaged(int page = 0, int size = 10, string sort = null, string name = null)
+        public async Task<ActionResult> ListPaged(int page = 0, int size = 10, string sort = null, string name = null, string login = null)
         {
             try
             {
                 var userId = User.Identity.Name;
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
-                var result = await _dataService.GetAsync(new ClientFilter(size, page, sort, name, Guid.Parse(userId)), source.Token);
+                var result = await _dataService.GetAsync(new ClientFilter(size, page, sort, name, login, Guid.Parse(userId)), source.Token);
                 Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }
@@ -208,6 +209,38 @@ namespace SoftUpdater.Controllers
             }
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<JsonResult> CheckName(string name)
+        {
+            bool result = false;
+            if (!string.IsNullOrEmpty(name))
+            {
+                var userId = Guid.Parse(User.Identity.Name);
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var check = await _dataService.GetAsync(new ClientFilter(null, null, null, name,null, userId), cancellationTokenSource.Token);
+                result = !check.Data.Any();
+            }
+            return Json(result);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<JsonResult> CheckLogin(string login)
+        {
+            bool result = false;
+            if (!string.IsNullOrEmpty(login))
+            {
+                var userId = Guid.Parse(User.Identity.Name);
+                var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var check = await _dataService.GetAsync(new ClientFilter(null, null, null, null, login, userId), cancellationTokenSource.Token);
+                result = !check.Data.Any();
+            }
+            return Json(result);
+        }
+
         // GET: UserController/Delete/5
         [Authorize]
         public async Task<ActionResult> Delete(Guid id)
@@ -251,14 +284,14 @@ namespace SoftUpdater.Controllers
             return PartialView();
         }
 
-        public async Task<IActionResult> ListSelectPaged(string name = null, int page = 0, int size = 10, string sort = null)
+        public async Task<IActionResult> ListSelectPaged(string name = null, string login = null, int page = 0, int size = 10, string sort = null)
         {
             try
             {
                 var userId = User.Identity.Name;
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<Client, ClientFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
-                var result = await _dataService.GetAsync(new ClientFilter(size, page, sort, name, Guid.Parse(userId)), source.Token);
+                var result = await _dataService.GetAsync(new ClientFilter(size, page, sort, name, login, Guid.Parse(userId)), source.Token);
                 Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
             }

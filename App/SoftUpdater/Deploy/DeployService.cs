@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using Npgsql;
 using System.Text.RegularExpressions;
 using SoftUpdater.Common;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SoftUpdater.Deploy
 {
@@ -29,7 +31,7 @@ namespace SoftUpdater.Deploy
             _logger = serviceProvider.GetRequiredService<ILogger<DeployService>>();
             _errorNotifyService = serviceProvider.GetRequiredService<IErrorNotifyService>();
             var _options = serviceProvider.GetRequiredService<IOptions<CommonOptions>>();
-            _connectionString = _options.Value.ConnectionString;
+            _connectionString = _options.Value.ConnectionStrings.FirstOrDefault(s=>s.Key == "MainConnection").Value;
         }
 
         /// <summary>

@@ -165,7 +165,7 @@ namespace SoftUpdater.SoftUpdaterClient
             var mode = configuration.GetValue<RunMode>("Mode");
             if (mode == RunMode.Normal)
             {
-                var connectionString = configuration.GetConnectionString("MainConnection");
+                var connectionString = configuration.GetConnectionString("LocalConnection");
                 builder.AddConfigDbProvider(options => options.UseSqlite(connectionString), connectionString);
             }
             return builder;

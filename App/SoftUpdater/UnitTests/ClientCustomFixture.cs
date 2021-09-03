@@ -33,6 +33,8 @@ namespace SoftUpdater.UnitTests
             serviceCollection.AddScoped<IBackupService, BackupService>();
             serviceCollection.AddScoped<IServiceHelper, ServiceHelper>();
             serviceCollection.AddScoped<IClientHttpClient, HttpClientFixture>();
+            serviceCollection.AddScoped<IUpdateScriptParser, UpdateScriptParser>();
+            
 
             serviceCollection.AddLogging(configure => configure.AddSerilog());                      
 

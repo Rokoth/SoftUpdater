@@ -29,7 +29,7 @@ namespace SoftUpdater.ClientHttpClient
         private string _token { get; set; }
 
         public event EventHandler OnConnect;
-
+        private ClientIdentity _identity;
         public bool IsConnected => isConnected;
 
         public ClientHttpClient(IHttpClientSettings settings, IServiceProvider serviceProvider)
@@ -90,6 +90,7 @@ namespace SoftUpdater.ClientHttpClient
 
         public async Task<bool> Auth(ClientIdentity identity)
         {
+            _identity = identity;
             var result = await Execute(client =>
                 client.PostAsync($"{GetApi<ClientIdentity>()}", identity.SerializeRequest()), "Post", s => s.ParseResponse<ClientIdentityResponse>(), false);
             if (result.ResponseCode == ResponseEnum.Error) return false;
@@ -147,22 +148,32 @@ namespace SoftUpdater.ClientHttpClient
             return false;
         }
 
-        private async Task<T> Execute<T>(
+        private async Task<Response<T>> Execute<T>(
             Func<HttpClient, Task<HttpResponseMessage>> action,
             string method,
-            Func<HttpResponseMessage, Task<T>> parseMethod, bool needAuth = true)
+            Func<HttpResponseMessage, Task<Response<T>>> parseMethod, bool needAuth = true) where T:class
         {
             using (HttpClient client = new HttpClient())
             {
                 try
                 {
                     var result = await action(client);
-                    return await parseMethod(result);
+                    var res = await parseMethod(result);
+                    if (res.ResponseCode == ResponseEnum.NeedAuth && needAuth && _identity!=null)
+                    {
+                        await Auth(_identity);
+                        result = await action(client);
+                        res = await parseMethod(result);
+                    }
+                    return res;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError($"Error in {method}: {ex.Message}; StackTrace: {ex.StackTrace}");
-                    return default;
+                    return new Response<T>()
+                    { 
+                       ResponseCode = ResponseEnum.Error
+                    };
                 }
             }
         }
@@ -194,7 +205,7 @@ namespace SoftUpdater.ClientHttpClient
                 {
                     var check = await client.GetAsync($"{server}/api/v1/common/ping");
                     var result = check != null && check.IsSuccessStatusCode;
-                    _logger.LogInformation($"Ping result: server {server} {(result ? "connected" : "disconnected")}");
+                    if(!result) _logger.LogError($"Ping result: server {server} disconnected");
                     return result;
                 }
                 catch (Exception ex)
@@ -220,7 +231,7 @@ namespace SoftUpdater.ClientHttpClient
                             { HttpRequestHeader.Authorization.ToString(), $"Bearer {_token}" },
                             { HttpRequestHeader.ContentType.ToString(), "application/json" },
                         },
-                    RequestUri = new Uri($"{GetApi<ReleaseClient>()}"),
+                    RequestUri = new Uri($"{GetApi<Release>()}?version={currentVersion}"),
                     Method = HttpMethod.Get
                 };
 
@@ -231,15 +242,19 @@ namespace SoftUpdater.ClientHttpClient
             if (result.ResponseCode != ResponseEnum.Error)
             {
                 var resp = result.ResponseBody.ToList();
-                var lastVersion = resp.First();
-                for (int i = 1; i < resp.Count(); i++)
+                if (resp.Any())
                 {
-                    if (VersionCompare(resp[i].Version, lastVersion.Version))
+                    var lastVersion = resp.First();
+                    for (int i = 1; i < resp.Count(); i++)
                     {
-                        lastVersion = resp[i];
+                        if (VersionCompare(resp[i].Version, lastVersion.Version))
+                        {
+                            lastVersion = resp[i];
+                        }
                     }
+                    return lastVersion;
                 }
-                return lastVersion;
+                return null;
             }
             return null;
         }

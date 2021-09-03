@@ -36,18 +36,21 @@ namespace SoftUpdaterClient.Service
                     var literals = ParseRow(row, result);
                     if (literals[0] is CustomLiteral commandName)
                     {
-                        command.Name = commandName.Text;
+                        if (commandName.Text.EndsWith(":"))
+                        {
+                            command.Name = commandName.Text.Substring(0, commandName.Text.Length - 1);
+                        }
+                        else
+                        {
+                            throw new Exception($"Не установлен знак : в строке {rowNum} после наименования команды");
+                        }
                     }
                     else
                     {
                         throw new Exception($"Некорректное наименование команды в строке {rowNum}");
                     }
-                    if (literals[1].LiteralType != LiteralTypeEnum.Delimiter)
-                    {
-                        throw new Exception($"Не установлен знак : в строке {rowNum} после наименования команды");
-                    }
-                    
-                    int lastPos = 2;
+                                        
+                    int lastPos = 1;
                     List<ILiteral> conditionList = new List<ILiteral>();
                     bool isSetCommand = false;
 
@@ -57,6 +60,7 @@ namespace SoftUpdaterClient.Service
                         {
                             command.CommandType = commandLiteral.Command;
                             isSetCommand = true;
+                            lastPos++;
                             break;
                         }
                         conditionList.Add(literals[lastPos]);
@@ -69,6 +73,7 @@ namespace SoftUpdaterClient.Service
                     {
                         if (literals[lastPos] is CustomLiteral argument)
                         {
+                            if (command.Arguments == null) command.Arguments = new List<string>();
                             command.Arguments.Add(argument.Text);
                             lastPos++;
                         }
@@ -261,11 +266,12 @@ namespace SoftUpdaterClient.Service
         {
             string result = "";
             bool isQuote = false;
+            char? prevChar = null;
             for (int i = cursor; i < row.Length; i++)
             {
                 if (isQuote)
                 {
-                    if (row[i] == '\"')
+                    if (row[i] == '\"' && prevChar!='\\')
                     {
                         cursor++;
                         return result;
@@ -298,13 +304,14 @@ namespace SoftUpdaterClient.Service
                                 cursor++;
                                 return ")";
                             }
-                            return result;
+                            return result;                       
                         default:
                             cursor++;
                             result += row[i];
                             break;
                     }                                  
                 }
+                prevChar = row[i];
             }
             return result;
         }
@@ -403,7 +410,7 @@ namespace SoftUpdaterClient.Service
             {
                 return new CommandLiteral(command);
             }
-            if (word == ":") return new Literal(LiteralTypeEnum.Delimiter);
+            
             if (word == "(") return new Literal(LiteralTypeEnum.BraceOpen);
             if (word == ")") return new Literal(LiteralTypeEnum.BraceClose);
             var commandExp = commands.FirstOrDefault(s=>s.Name.Equals(word, StringComparison.InvariantCultureIgnoreCase));

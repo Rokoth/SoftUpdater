@@ -59,7 +59,10 @@ namespace SoftUpdater.UnitTests
             serviceCollection.ConfigureAutoMapper();
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
-            ServiceProvider.GetRequiredService<IOptions<CommonOptions>>().Value.ConnectionString = ConnectionString;
+            ServiceProvider.GetRequiredService<IOptions<CommonOptions>>().Value.ConnectionStrings = new System.Collections.Generic.Dictionary<string, string>()
+            {
+                { "MainConnection", ConnectionString}
+            };
             ServiceProvider.GetRequiredService<IDeployService>().Deploy().GetAwaiter().GetResult();
 
         }

@@ -39,14 +39,15 @@ namespace SoftUpdaterClient.Service
             _downloadedVersionField = _options.DownloadedSelfVersionField;
             _installedVersionField = _options.InstalledSelfVersionField;
             _nextRunDateTimeField = _options.NextRunDateTimeSelfField;
-            _expression = CronExpression.Parse(_options.InstallSelfSchedule);
+            _expression = CronExpression.Parse(_options.InstallSelfSchedule, CronFormat.IncludeSeconds);
             _logger = _serviceProvider.GetRequiredService<ILogger<SelfUpdateHostedService>>();
-            GetNextRunDateTime();
+            
             httpClient = _serviceProvider.GetRequiredService<IClientHttpClient>();
         }
 
         private async Task Run()
         {
+            GetNextRunDateTime(_context);
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 if (_nextRunDateTime <= DateTimeOffset.Now)
@@ -95,7 +96,7 @@ namespace SoftUpdaterClient.Service
                     }
                     finally
                     {
-                        GetNextRunDateTime();
+                        GetNextRunDateTime(_context);
                     }
                 }
             }
@@ -137,34 +138,40 @@ namespace SoftUpdaterClient.Service
             }
         }
 
-        private void GetNextRunDateTime()
+        private void GetNextRunDateTime(DbSqLiteContext _context)
         {
+            var nextRunDateTimeSettings = _context.Settings.FirstOrDefault(s => s.ParamName == _nextRunDateTimeField);
             if (_nextRunDateTime == null)
             {
-                var nextRunDateTimeSettings = _context.Settings.FirstOrDefault(s => s.ParamName == _nextRunDateTimeField);
                 if (nextRunDateTimeSettings != null)
                 {
                     if (DateTimeOffset.TryParse(nextRunDateTimeSettings.ParamValue, out _nextRunDateTime)) return;
                 }
+                _nextRunDateTime = DateTimeOffset.Now;
             }
-            _nextRunDateTime = _expression.GetNextOccurrence(DateTimeOffset.Now, TimeZoneInfo.Local).Value;
-            var nextRunDateTime = _context.Settings.FirstOrDefault(s => s.ParamName == _nextRunDateTimeField);
-            if (nextRunDateTime != null)
+            _nextRunDateTime = _expression.GetNextOccurrence(_nextRunDateTime, TimeZoneInfo.Local).Value;
+            if (nextRunDateTimeSettings != null)
             {
-                nextRunDateTime.ParamValue = _nextRunDateTime.ToString();
-                _context.Settings.Update(nextRunDateTime);
+                nextRunDateTimeSettings.ParamValue = _nextRunDateTime.ToString();
+                _context.Settings.Update(nextRunDateTimeSettings);
+                _context.SaveChanges();
             }
             else
             {
-                var maxId = _context.Settings.Select(s => s.Id).Max();
-                _context.Settings.Add(new DbClient.Model.Settings()
+                var maxId = 1;
+                if (_context.Settings.Any())
                 {
-                    Id = maxId + 1,
+                    maxId = _context.Settings.Max(s => s.Id) + 1;
+                }
+                nextRunDateTimeSettings = new DbClient.Model.Settings()
+                {
+                    Id = maxId,
                     ParamName = _nextRunDateTimeField,
                     ParamValue = _nextRunDateTime.ToString()
-                });
+                };
+                _context.Settings.Add(nextRunDateTimeSettings);
+                _context.SaveChanges();
             }
-            _context.SaveChanges();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

@@ -3,6 +3,8 @@
 //
 //ref1
 
+using System.Collections.Generic;
+
 namespace SoftUpdater.Common
 {
     /// <summary>
@@ -13,7 +15,7 @@ namespace SoftUpdater.Common
         /// <summary>
         /// Строка подключения к базе данных
         /// </summary>
-        public string ConnectionString { get; set; }
+        public Dictionary<string, string> ConnectionStrings { get; set; }
         public ErrorNotifyOptions ErrorNotifyOptions { get; set; }
         public string UploadBasePath { get; set; }
     }
@@ -51,6 +53,7 @@ namespace SoftUpdater.Common
 
         public RunMode Mode { get; set; }
         public string SelfUpdateTempDir { get; set; }
+        public string Server { get; set; }
     }
 
     public enum RunMode

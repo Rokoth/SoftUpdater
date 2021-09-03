@@ -20,7 +20,9 @@ namespace SoftUpdater.Service
 
         protected override Expression<Func<Db.Model.Client, bool>> GetFilter(Contract.Model.ClientFilter filter)
         {
-            return s => (filter.Name == null || s.Name.Contains(filter.Name)) && (filter.UserId == null || s.UserId == filter.UserId);
+            return s => (filter.Name == null || s.Name.Contains(filter.Name)) 
+            && (filter.Login == null || s.Login.Contains(filter.Login)) &&
+            (filter.UserId == null || s.UserId == filter.UserId);
         }
 
         protected override async Task<Db.Model.Client> MapToEntityAdd(Contract.Model.ClientCreator creator, CancellationToken token)

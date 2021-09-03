@@ -14,12 +14,14 @@ namespace SoftUpdater.Contract.Model
 
     public class ClientFilter : Filter<Client>
     {
-        public ClientFilter(int size, int page, string sort, string name, Guid userId) : base(size, page, sort)
+        public ClientFilter(int? size, int? page, string sort, string name, string login, Guid userId) : base(size, page, sort)
         {
             Name = name;
             UserId = userId;
+            Login = login;
         }
         public string Name { get; }
+        public string Login { get; }
         public Guid? UserId { get; }
     }
 
