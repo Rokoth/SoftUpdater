@@ -10,6 +10,7 @@ using System;
 using Microsoft.AspNetCore;
 using Serilog;
 using System.IO;
+using SoftUpdater.Common;
 
 namespace SoftUpdater.SoftUpdaterHost
 {
@@ -84,6 +85,9 @@ namespace SoftUpdater.SoftUpdaterHost
                         .ReadFrom.Configuration(hostingContext.Configuration)
                         .CreateLogger();
                     logging.AddSerilog(Log.Logger);
+                    logging.AddErrorNotifyLogger(config => {
+                        config.Options = hostingContext.Configuration.GetValue<ErrorNotifyOptions>("ErrorNotifyOptions");
+                    });
                 })
                 .UseKestrel();
 

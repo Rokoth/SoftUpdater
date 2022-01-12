@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>0.0.13</Version>
+    <Version>0.0.14</Version>
     <Description>EntityFramework wrapper</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>2021 Dmitriy Rokoth</Copyright>

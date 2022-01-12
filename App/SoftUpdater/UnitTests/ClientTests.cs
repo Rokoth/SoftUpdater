@@ -28,57 +28,8 @@ namespace SoftUpdater.UnitTests
             var appDir = Path.Combine(Directory.GetCurrentDirectory(), "testAppPath");
             var backUpDir = Path.Combine(Directory.GetCurrentDirectory(), "testbackUpPath");
             try
-            {              
-                var backUpService = _serviceProvider.GetRequiredService<IBackupService>();                            
-
-                var ignoreDirectories = new List<string> { "ignore_dir_1", "ignore_dir_2", "ignore_dir_3" };
-                var ignoreFiles = new List<string> { "ignore_file_1.txt", "ignore_file_2.txt", "ignore_file_3.txt" };
-
-                Directory.CreateDirectory(appDir);
-                Directory.CreateDirectory(backUpDir);
-
-                var toCreateFiles = new List<string> { "backUp_file_1.txt", "backUp_file_2.txt", "backUp_file_3.txt" };
-                var toCreateDirectories = new List<string> { "backUp_dir_1", "backUp_dir_2", "backUp_dir_3" };
-                toCreateFiles.AddRange(ignoreFiles);
-                toCreateDirectories.AddRange(ignoreDirectories);
-
-                foreach (var dir in toCreateDirectories)
-                {
-                    Directory.CreateDirectory(Path.Combine(appDir, dir));
-                }
-
-                foreach (var fileName in toCreateFiles)
-                {
-                    using (var streamWriter = new StreamWriter(Path.Combine(appDir, fileName)))
-                    {
-                        streamWriter.WriteLine("test");
-                    }
-                }
-                CreateDabase(rootConnectionString, connectionString, dbName);
-
-                var result = await backUpService.Backup(appDir, backUpDir, new string[] { connectionString }, ignoreDirectories, ignoreFiles);
-                Assert.True(result);
-                var backUpDbFileExists = Directory.GetFiles(backUpDir, $"backup_*.backup").Any();
-                Assert.True(backUpDbFileExists);
-
-                var directories = Directory.GetDirectories(backUpDir);
-                foreach (var dir in directories)
-                {
-                    var dirName = dir.Split(Path.DirectorySeparatorChar).Last();
-                    Assert.Contains(dirName, toCreateDirectories);
-                    Assert.DoesNotContain(dirName, ignoreDirectories);
-                }
-
-                var files = Directory.GetFiles(backUpDir);
-                foreach (var file in files)
-                {
-                    var fileName = file.Split(Path.DirectorySeparatorChar).Last();
-                    if (!fileName.EndsWith("backup"))
-                    {
-                        Assert.Contains(fileName, toCreateFiles);
-                        Assert.DoesNotContain(fileName, ignoreFiles);
-                    }
-                }
+            {
+                await DoBackUpWithAssert(dbName, connectionString, rootConnectionString, appDir, backUpDir);
             }
             catch (Exception)
             {
@@ -89,6 +40,85 @@ namespace SoftUpdater.UnitTests
                 if(Directory.Exists(appDir)) Directory.Delete(appDir, true);
                 if (Directory.Exists(backUpDir)) Directory.Delete(backUpDir, true);
                 DropDatabase(rootConnectionString, dbName);
+            }
+        }
+
+        [Fact]
+        public async Task RollbackServiceTest()
+        {
+            string dbName = $"soft_updater_client_test_{DateTimeOffset.Now:yyyy_MM_dd_HH_mm_ss}";
+            var connectionString = $"Server=localhost;Database={dbName};Username=postgres;Password=Rok_Oth_123";
+            var rootConnectionString = Regex.Replace(connectionString, "Database=.*?;", $"Database=postgres;");
+            var appDir = Path.Combine(Directory.GetCurrentDirectory(), "testAppPath");
+            var backUpDir = Path.Combine(Directory.GetCurrentDirectory(), "testbackUpPath");
+            try
+            {
+                await DoBackUpWithAssert(dbName, connectionString, rootConnectionString, appDir, backUpDir);
+                //todo: rollback and check
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (Directory.Exists(appDir)) Directory.Delete(appDir, true);
+                if (Directory.Exists(backUpDir)) Directory.Delete(backUpDir, true);
+                DropDatabase(rootConnectionString, dbName);
+            }
+        }
+
+        private async Task DoBackUpWithAssert(string dbName, string connectionString, string rootConnectionString, string appDir, string backUpDir)
+        {
+            var backUpService = _serviceProvider.GetRequiredService<IBackupService>();
+
+            var ignoreDirectories = new List<string> { "ignore_dir_1", "ignore_dir_2", "ignore_dir_3" };
+            var ignoreFiles = new List<string> { "ignore_file_1.txt", "ignore_file_2.txt", "ignore_file_3.txt" };
+
+            Directory.CreateDirectory(appDir);
+            Directory.CreateDirectory(backUpDir);
+
+            var toCreateFiles = new List<string> { "backUp_file_1.txt", "backUp_file_2.txt", "backUp_file_3.txt" };
+            var toCreateDirectories = new List<string> { "backUp_dir_1", "backUp_dir_2", "backUp_dir_3" };
+            toCreateFiles.AddRange(ignoreFiles);
+            toCreateDirectories.AddRange(ignoreDirectories);
+
+            foreach (var dir in toCreateDirectories)
+            {
+                Directory.CreateDirectory(Path.Combine(appDir, dir));
+            }
+
+            foreach (var fileName in toCreateFiles)
+            {
+                using (var streamWriter = new StreamWriter(Path.Combine(appDir, fileName)))
+                {
+                    streamWriter.WriteLine("test");
+                }
+            }
+            CreateDabase(rootConnectionString, connectionString, dbName);
+
+            var result = await backUpService.Backup(appDir, backUpDir, new string[] { connectionString }, ignoreDirectories, ignoreFiles);
+            Assert.True(result);
+            var backUpDbFileExists = Directory.GetFiles(backUpDir, $"backup_*.backup").Any();
+            Assert.True(backUpDbFileExists);
+
+            var directories = Directory.GetDirectories(backUpDir);
+            foreach (var dir in directories)
+            {
+                var dirName = dir.Split(Path.DirectorySeparatorChar).Last();
+                Assert.Contains(dirName, toCreateDirectories);
+                Assert.DoesNotContain(dirName, ignoreDirectories);
+            }
+
+            var files = Directory.GetFiles(backUpDir);
+            foreach (var file in files)
+            {
+                var fileName = file.Split(Path.DirectorySeparatorChar).Last();
+                if (!fileName.EndsWith("backup"))
+                {
+                    Assert.Contains(fileName, toCreateFiles);
+                    Assert.DoesNotContain(fileName, ignoreFiles);
+                }
             }
         }
 

@@ -104,8 +104,7 @@ namespace SoftUpdater.SoftUpdaterHost
             services.AddScoped<IRepository<Db.Model.ReleaseHistory>, Repository<Db.Model.ReleaseHistory>>();
             services.AddScoped<IRepository<Db.Model.ReleaseArchitectHistory>, Repository<Db.Model.ReleaseArchitectHistory>>();
             services.AddDataServices();
-            services.AddScoped<IDeployService, DeployService>();
-            //services.AddScoped<INotifyService, NotifyService>();
+            services.AddScoped<IDeployService, DeployService>();         
             services.ConfigureAutoMapper();
             services.AddSwaggerGen(swagger =>
             {
