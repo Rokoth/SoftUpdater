@@ -18,6 +18,6 @@ namespace SoftUpdater.Contract.Model
 
     public class LoadHistoryUpdater : IEntity
     {
-        public Guid Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Guid Id { get; set; }
     }
 }

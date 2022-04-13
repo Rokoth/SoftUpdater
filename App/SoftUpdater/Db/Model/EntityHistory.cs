@@ -7,25 +7,18 @@ using System;
 
 namespace SoftUpdater.Db.Model
 {
-    /// <summary>
-    /// Общий класс-предок для всех моделей БД
-    /// </summary>
-    public abstract class Entity: IEntity
+    public abstract class EntityHistory : IEntity
     {
-        /// <summary>
-        /// Идентификатор
-        /// </summary>
         [PrimaryKey]
+        [ColumnName("h_id")]
+        public long HId { get; set; }
+        [ColumnName("change_date")]
+        public DateTimeOffset ChangeDate { get; set; }
+
         [ColumnName("id")]
         public Guid Id { get; set; }
-        /// <summary>
-        /// Дата изменения
-        /// </summary>
         [ColumnName("version_date")]
         public DateTimeOffset VersionDate { get; set; }
-        /// <summary>
-        /// Флаг удаления
-        /// </summary>
         [ColumnName("is_deleted")]
         public bool IsDeleted { get; set; }
     }
