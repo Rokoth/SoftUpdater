@@ -18,7 +18,7 @@ namespace SoftUpdater.Service
         protected override async Task<Contract.Model.ReleaseHistory> Enrich(Contract.Model.ReleaseHistory release, CancellationToken token)
         {
             var clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Contract.Model.Client, Contract.Model.ClientFilter>>();
-            release.Client = await clientDataService.GetAsync(release.ClientId, token);
+            release.Client = (await clientDataService.GetAsync(release.ClientId, token)).Name;
             return release;
         }
 
@@ -27,7 +27,7 @@ namespace SoftUpdater.Service
             var clientDataService = _serviceProvider.GetRequiredService<IGetDataService<Contract.Model.Client, Contract.Model.ClientFilter>>();
             foreach (var release in releases)
             {
-                release.Client = await clientDataService.GetAsync(release.ClientId, token);
+                release.Client = (await clientDataService.GetAsync(release.ClientId, token)).Name;
             }
             return releases;
         }

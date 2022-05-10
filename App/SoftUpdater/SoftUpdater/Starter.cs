@@ -85,8 +85,11 @@ namespace SoftUpdater.SoftUpdaterHost
                         .ReadFrom.Configuration(hostingContext.Configuration)
                         .CreateLogger();
                     logging.AddSerilog(Log.Logger);
+                                        
+                    var options = hostingContext.Configuration.GetSection("ErrorNotifyOptions").Get<ErrorNotifyOptions>();
+
                     logging.AddErrorNotifyLogger(config => {
-                        config.Options = hostingContext.Configuration.GetValue<ErrorNotifyOptions>("ErrorNotifyOptions");
+                        config.Options = options;
                     });
                 })
                 .UseKestrel();
