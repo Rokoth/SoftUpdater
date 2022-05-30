@@ -19,18 +19,4 @@ namespace SoftUpdater.Contract.Model
         public string Path { get; set; }
         public string FileName { get; set; }
     }
-
-    public class ReleaseArchitectHistory : EntityHistory
-    {
-        [Display(Name = "ИД Релиза")]
-        public Guid ReleaseId { get; set; }
-                
-        [Display(Name = "Имя")]        
-        public string Name { get; set; }
-
-        [Display(Name = "Путь")]       
-        public string Path { get; set; }
-
-        public string FileName { get; set; }
-    }
 }
