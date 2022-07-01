@@ -1,31 +1,50 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿//Copyright 2021 Dmitriy Rokoth
+//Licensed under the Apache License, Version 2.0
+//
+//ref 1
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using SoftUpdater.Common;
 using SoftUpdater.Contract.Model;
 using SoftUpdater.Service;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUpdater.Controllers
 {
-    public class ReleaseArchitectController : Controller
-    {
-        private IServiceProvider _serviceProvider;
-        private readonly IErrorNotifyService _errorNotifyService;
-        
 
-        public ReleaseArchitectController(IServiceProvider serviceProvider)
+    public class BaseController : Controller
+    {
+        protected IServiceProvider _serviceProvider;
+        protected readonly IErrorNotifyService _errorNotifyService;
+        protected string _controllerName;
+
+        public BaseController(IServiceProvider serviceProvider, string controllerName)
         {
             _serviceProvider = serviceProvider;
             _errorNotifyService = _serviceProvider.GetRequiredService<IErrorNotifyService>();
-            
+            _controllerName = controllerName;
         }
+
+        protected async Task<ActionResult> BaseExec(Func<Task<ActionResult>> action, string methodName)
+        {
+            try
+            {
+                return await action();
+            }
+            catch (Exception ex)
+            {
+                await _errorNotifyService.Send($"Ошибка в методе {_controllerName}::{methodName}: {ex.Message} {ex.StackTrace}");
+                return RedirectToAction("Index", "Error", new { Message = ex.Message });
+            }
+        }
+    }
+    public class ReleaseArchitectController : BaseController
+    {               
+        public ReleaseArchitectController(IServiceProvider serviceProvider): base(serviceProvider, "ReleaseArchitectController") { }
 
         // GET: UserController
         [Authorize]
@@ -38,42 +57,32 @@ namespace SoftUpdater.Controllers
         [Authorize]
         public async Task<ActionResult> ListPaged(Guid releaseId, int page = 0, int size = 10, string sort = null, string name = null, string path = null)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 var result = await _dataService.GetAsync(new ReleaseArchitectFilter(releaseId, size, page, sort, name, path), source.Token);
                 Response.Headers.Add("x-pages", result.PageCount.ToString());
                 return PartialView(result.Data);
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::ListPaged: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "ListPaged");            
         }
                 
         [Authorize]
         public async Task<ActionResult> Details([FromRoute] Guid id)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
                 var cancellationTokenSource = new CancellationTokenSource(30000);
                 var result = await _dataService.GetAsync(id, cancellationTokenSource.Token);
                 return View(result);
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Details: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "Details");
         }
                
         [Authorize]
         public async Task<IActionResult> Edit(Guid id)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
@@ -87,12 +96,7 @@ namespace SoftUpdater.Controllers
                     Release = result.Release
                 };
                 return View(updater);
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Edit: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "Edit");
         }
               
         [HttpPost]
@@ -100,38 +104,36 @@ namespace SoftUpdater.Controllers
         [Authorize]
         public async Task<ActionResult> Edit(Guid id, ReleaseArchitectUpdater updater)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IUpdateDataService<ReleaseArchitect, ReleaseArchitectUpdater>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 var result = await _dataService.UpdateAsync(updater, source.Token);
                 return RedirectToAction("Details", new { id = result.Id });
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Edit: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "Edit");
         }
 
         [Authorize]
         public async Task<IActionResult> Create([FromQuery] Guid releaseId)
         {
-            var userId = User.Identity.Name;
-            var _releaseDataService = _serviceProvider.GetRequiredService<IGetDataService<Release, ReleaseFilter>>();
-            var cancellationTokenSource = new CancellationTokenSource(30000);
-            var release = await _releaseDataService.GetAsync(releaseId, cancellationTokenSource.Token);
-            if (release == null)
+            return await BaseExec(async () =>
             {
-                return RedirectToAction("Index", "Error", new { Message = "Неверный клиент" });
-            }            
+                var userId = User.Identity.Name;
+                var _releaseDataService = _serviceProvider.GetRequiredService<IGetDataService<Release, ReleaseFilter>>();
+                var cancellationTokenSource = new CancellationTokenSource(30000);
+                var release = await _releaseDataService.GetAsync(releaseId, cancellationTokenSource.Token);
+                if (release == null)
+                {
+                    return RedirectToAction("Index", "Error", new { Message = "Неверный клиент" });
+                }            
 
-            var creator = new ReleaseArchitectCreator()
-            {
-               Release = release.Version,
-               ReleaseId = releaseId
-            };
-            return View(creator);
+                var creator = new ReleaseArchitectCreator()
+                {
+                   Release = release.Version,
+                   ReleaseId = releaseId
+                };
+                return View(creator);
+            }, "Create");
         }
 
         // POST: UserController/Create
@@ -140,18 +142,13 @@ namespace SoftUpdater.Controllers
         [Authorize]
         public async Task<IActionResult> Create(ReleaseArchitectCreator creator)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IAddDataService<ReleaseArchitect, ReleaseArchitectCreator>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);               
                 ReleaseArchitect result = await _dataService.AddAsync(creator, source.Token);
                 return RedirectToAction(nameof(Details), new { id = result.Id });
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Create: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "Create");
         }
 
         [HttpGet]
@@ -186,18 +183,13 @@ namespace SoftUpdater.Controllers
         [Authorize]
         public async Task<ActionResult> Delete(Guid id)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IGetDataService<ReleaseArchitect, ReleaseArchitectFilter>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 ReleaseArchitect result = await _dataService.GetAsync(id, source.Token);
                 return View(result);
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Delete: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "Delete");
         }
 
         // POST: UserController/Delete/5
@@ -206,18 +198,13 @@ namespace SoftUpdater.Controllers
         [Authorize]
         public async Task<ActionResult> Delete(Guid id, ReleaseArchitect model)
         {
-            try
+            return await BaseExec(async () =>
             {
                 var _dataService = _serviceProvider.GetRequiredService<IDeleteDataService<ReleaseArchitect>>();
                 CancellationTokenSource source = new CancellationTokenSource(30000);
                 ReleaseArchitect result = await _dataService.DeleteAsync(id, source.Token);
                 return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                await _errorNotifyService.Send($"Ошибка в методе ReleaseArchitectController::Delete: {ex.Message} {ex.StackTrace}");
-                return RedirectToAction("Index", "Error", new { Message = ex.Message });
-            }
+            }, "Delete");
         }
     }
 }
