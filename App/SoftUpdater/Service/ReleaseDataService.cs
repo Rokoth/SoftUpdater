@@ -177,7 +177,7 @@ namespace SoftUpdater.Service
             throw new NotImplementedException();
         }
 
-        protected override string DefaultSort => "Version";
+        protected override string DefaultSort => "LoadDate";
 
         protected override async Task<Db.Model.LoadHistory> MapToEntityAdd(Contract.Model.LoadHistoryCreator creator, CancellationToken token)
         {

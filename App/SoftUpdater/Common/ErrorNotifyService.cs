@@ -336,15 +336,32 @@ namespace SoftUpdater.Common
             {
                 try
                 {
-                    _errorNotifyService
-                        .Send($"Message: {exception.Message} StackTrace: {exception.StackTrace}")
-                        .ContinueWith(s => {
-                            if (s.Exception != null)
+                    if (exception != null)
+                    {
+                        _errorNotifyService
+                            .Send($"Message: {exception.Message} StackTrace: {exception.StackTrace}")
+                            .ContinueWith(s =>
                             {
-                                Console.WriteLine($"ErrorNotify exception: {s.Exception.Message} {s.Exception.StackTrace}");
-                            }
-                        })
-                        .ConfigureAwait(false);
+                                if (s.Exception != null)
+                                {
+                                    Console.WriteLine($"ErrorNotify exception: {s.Exception.Message} {s.Exception.StackTrace}");
+                                }
+                            })
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        _errorNotifyService
+                               .Send($"Message: {state}")
+                               .ContinueWith(s =>
+                               {
+                                   if (s.Exception != null)
+                                   {
+                                       Console.WriteLine($"ErrorNotify exception: {s.Exception.Message} {s.Exception.StackTrace}");
+                                   }
+                               })
+                               .ConfigureAwait(false);
+                    }
                 }
                 catch (Exception ex)
                 {

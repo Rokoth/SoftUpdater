@@ -80,6 +80,22 @@ namespace SoftUpdater.TaskCollector.Controllers
             }
         }
 
+      
+        [HttpPost]     
+        public async Task<IActionResult> CheckLogin(bool check)
+        {
+            try
+            {
+                var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return Ok(result.Succeeded);
+            }
+            catch (Exception ex)
+            {
+                await _errorNotifyService.Send($"Ошибка в методе AccountController::CheckLogin: {ex.Message} {ex.StackTrace}");
+                return RedirectToAction("Index", "Error", new { ex.Message });
+            }
+        }
+
         // POST: AccountController/Logout
         /// <summary>
         /// LogOut method

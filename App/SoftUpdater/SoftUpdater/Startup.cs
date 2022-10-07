@@ -99,6 +99,7 @@ namespace SoftUpdater.SoftUpdaterHost
             services.AddScoped<IRepository<Db.Model.Client>, Repository<Db.Model.Client>>();
             services.AddScoped<IRepository<Db.Model.Release>, Repository<Db.Model.Release>>();
             services.AddScoped<IRepository<Db.Model.ReleaseArchitect>, Repository<Db.Model.ReleaseArchitect>>();
+            services.AddScoped<IRepository<Db.Model.LoadHistory>, Repository<Db.Model.LoadHistory>>();
             services.AddScoped<IRepository<Db.Model.UserHistory>, Repository<Db.Model.UserHistory>>();
             services.AddScoped<IRepository<Db.Model.ClientHistory>, Repository<Db.Model.ClientHistory>>();
             services.AddScoped<IRepository<Db.Model.ReleaseHistory>, Repository<Db.Model.ReleaseHistory>>();

@@ -19,11 +19,12 @@
                         </svg>
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Index">Домой</a>                        
-                        <a class="dropdown-item" asp-area="" asp-controller="User" asp-action="Index">Пользователи</a>
-                        <a class="dropdown-item" asp-area="" asp-controller="Client" asp-action="Index">Клиенты</a>
-                        <a class="dropdown-item" asp-area="" asp-controller="Release" asp-action="Index">Обновления</a>
-                        <a class="dropdown-item" asp-area="" asp-controller="LoadHistory" asp-action="Index">История загрузок</a>
+                        <a class="dropdown-item unlogged" asp-area="" asp-controller="Account" asp-action="Login">Авторизация</a>
+                        <a class="dropdown-item logged" asp-area="" asp-controller="Home" asp-action="Index">Домой</a>
+                        <a class="dropdown-item logged" asp-area="" asp-controller="User" asp-action="Index">Пользователи</a>
+                        <a class="dropdown-item logged" asp-area="" asp-controller="Client" asp-action="Index">Клиенты</a>
+                        <a class="dropdown-item logged" asp-area="" asp-controller="Release" asp-action="Index">Обновления</a>
+                        <a class="dropdown-item logged" asp-area="" asp-controller="LoadHistory" asp-action="Index">История загрузок</a>
                     </div>
                 </div>
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SoftUpdater</a>
@@ -39,7 +40,10 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Пользовательское соглашение</a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item" id="login_link">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Войти</a>
+                        </li>
+                        <li class="nav-item" id="logout_link">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">Выйти</a>
                         </li>
                     </ul>
@@ -55,7 +59,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2021 - SoftUpdater - <a asp-area="" asp-controller="Home" asp-action="Privacy">Пользовательское соглашение</a>
+            &copy; 2021-2022 - SoftUpdater - <a asp-area="" asp-controller="Home" asp-action="Privacy">Пользовательское соглашение</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
